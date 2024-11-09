@@ -362,10 +362,6 @@ def process_forest_data_generate_deforestation_rate_graph():
     )
     ds_s2 = ds_s2 / 10000
 
-    # # vizualisation
-    # fig = ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=3)
-    # plt.savefig("ndviplot.png", dpi=800)
-
     def to_km2(dataarray, resolution):
         # Calculate forest area
         return dataarray * np.prod(list(resolution)) / 1e6
@@ -378,7 +374,6 @@ def process_forest_data_generate_deforestation_rate_graph():
     plt.title("Forest Cover")
     plt.ylabel("Forest Cover [km²]")
     plt.ylim(0)
-    plt.savefig("deforestation_rate.png")
 
     # Create a BytesIO object to save the image
     img_buffer = io.BytesIO()
@@ -415,7 +410,6 @@ def process_forest_data_generate_visualisation():
 
     # # vizualisation
     ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=3)
-    plt.savefig("ndviplot.png", dpi=800)
 
     # Create a BytesIO object to save the image
     img_buffer = io.BytesIO()
