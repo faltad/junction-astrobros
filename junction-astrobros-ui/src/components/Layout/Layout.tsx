@@ -1,13 +1,13 @@
 import "./Layout.css";
-import { Map } from "../Map/Map";
 import Navbar from "../Navbar/Navbar";
+import { Outlet } from "react-router-dom";
 
 export const Layout = () => {
   return (
     <div className="app">
       <Navbar />
       <div className="mapWrapper">
-        <Map />
+        <Outlet />
       </div>
     </div>
   );

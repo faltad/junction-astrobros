@@ -13,6 +13,7 @@ import {
   findSWandNECoordinates,
   SWandNE,
 } from "../../utilities/coordinates-helper";
+import { useNavigate } from "react-router-dom";
 
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
