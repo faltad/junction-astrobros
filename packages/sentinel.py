@@ -34,6 +34,7 @@ DATEFORMAT = "%Y-%m-%d"
 class AvailableLayers(str, Enum):
     NDVI = "ndvi"
     TRUE_COLORS = "true_colors"
+    OIL_SLICK_AND_RED_TIDE = "oil_slick_and_red_tide"
 
 
 def plot_image(
@@ -59,6 +60,7 @@ def plot_image(
     img_buffer = io.BytesIO()
     # tight + 0 pad means no white border on side of pic.
     plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
+    plt.savefig("test_oil.png", format="png", bbox_inches="tight", pad_inches=0)
     img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
 
     # Close the figure to free memory
@@ -89,20 +91,27 @@ def calculate_size(bbox: BBox) -> tuple[int, int]:
     return size
 
 
-async def _make_sentinel_request(
-    date_range: DateRange, evalscript: str, config: SHConfig, coords: Coords
+def _make_sentinel_request(
+    date_range: DateRange,
+    evalscript: str,
+    config: SHConfig,
+    coords: Coords,
+    data_collection: Optional[DataCollection] = None,
 ):
     bbox = prepare_bbox(coords)
     size = calculate_size(bbox)
     start_date = date_range.start_date.strftime(DATEFORMAT)
     end_date = date_range.end_date.strftime(DATEFORMAT)
+    if data_collection is None:
+        data_collection = DataCollection.SENTINEL2_L1C.define_from(
+            "s2l1c", service_url=config.sh_base_url
+        )
+
     r = SentinelHubRequest(
         evalscript=evalscript,
         input_data=[
             SentinelHubRequest.input_data(
-                data_collection=DataCollection.SENTINEL2_L1C.define_from(
-                    "s2l1c", service_url=config.sh_base_url
-                ),
+                data_collection=data_collection,
                 time_interval=(start_date, end_date),
             )
         ],
@@ -141,7 +150,9 @@ async def get_true_colors(
             }
         """
 
-    image = await _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    image = await _make_sentinel_request(
+        date_range, evalscript_true_color, config, coords
+    )
 
     # plot function
     # factor 1/255 to scale between 0-1
@@ -445,3 +456,55 @@ async def get_sentinel_image(
     elif layer == AvailableLayers.NDVI:
         return await get_ndvi_layer(coords, date_range, config)
     raise ValueError(f"Unavailable layer {str(layer.value)}")
+
+
+def get_oil_spill_analysis(coords: Coords, date_range: DateRange, config):
+    evalscript = """
+    //VERSION=3
+    function setup() {
+    return {
+        input: ["VV", "VH"],
+        output: { id: "default", bands: 3 },
+    }
+    }
+
+    function evaluatePixel(samples) {
+    var ORM = Math.log(0.01 / (0.01 + samples.VV * 2));
+
+    if (ORM < [0] && samples.VV < [0.018] && samples.VH < [0.00126]) {
+        return colorBlend(
+        ORM,
+        [-1.6, -1.4, -1.2, -1, -0.8, -0.6, -0.4, -0.2, 0],
+        [
+            [0, 0, 0.1],
+            [0, 0, 0.4],
+            [0, 0, 0.8],
+            [1, 0, 0.5],
+            [1, 0, 0],
+            [1, 0.5, 0.2],
+            [1, 0.8, 0.2],
+            [1, 1, 0.4],
+            [0.5, 0.8, 0.3],
+        ]
+        );
+    } else {
+        return [2.5 * samples.VV, 2.5 * samples.VV, 2.5 * samples.VV];
+    }
+    }
+    """
+
+    try:
+        data_collection = DataCollection.SENTINEL1_IW_DES.define_from(
+            "VV+VH", service_url=config.sh_base_url
+        )
+        image = _make_sentinel_request(
+            date_range, evalscript, config, coords, data_collection=data_collection
+        )
+
+    except sentinelhub.exceptions.DownloadFailedException:
+        raise exceptions.SentinelError()
+
+    # plot function
+    # factor 1/255 to scale between 0-1
+    # factor 1 to not over brighten the picture
+    return plot_image(image, clip_range=(0, 1))
