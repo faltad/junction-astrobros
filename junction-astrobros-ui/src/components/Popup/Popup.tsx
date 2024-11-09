@@ -1,19 +1,19 @@
 import "./Popup.css";
 
 import placeHolderImage from "../../assets/fig2.jpg";
+import { NavigateFunction } from "react-router-dom";
 
 type PopupProps = {
   swCoord: string;
   neCoord: string;
+  navigate: NavigateFunction;
 };
 
-export const Popup = ({ swCoord, neCoord }: PopupProps) => {
-  //   const navigate = useNavigate();
+export const Popup = ({ swCoord, neCoord, navigate }: PopupProps) => {
 
   const hanleOnClick = () => {
-    const toPath = `/image?swcoord=${swCoord}&neCoord=${neCoord}`;
-    console.log("toPath", toPath);
-    // navigate(toPath);
+    const toPath = `/map/details?swcoord=${swCoord}&neCoord=${neCoord}`;
+    navigate(toPath);
   };
 
   return (
