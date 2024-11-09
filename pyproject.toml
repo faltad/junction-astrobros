@@ -5,4 +5,7 @@ description = "Building a ecological disaster incident investigation tool."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi[standard]>=0.115.4",
+    "matplotlib>=3.9.2",
+    "sentinelhub>=3.11.1",
 ]
