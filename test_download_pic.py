@@ -46,7 +46,7 @@ def main(client_id: str, secret: str):
         north_west_latitude=-72.598106,
         north_west_longitude=1.820838,
     )
-    coords = colombia_coords
+    coords = random_helsinki_coords
     daterange = DateRange(
         start_date=datetime(2024, 9, 12), end_date=datetime(2024, 9, 21)
     )
