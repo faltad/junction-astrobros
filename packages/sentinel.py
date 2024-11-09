@@ -304,7 +304,7 @@ def get_interval_of_interest(season: Seasons, year: int) -> tuple[datetime, date
 
 
 def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
-    bbox = get_bbox_forestation_analysis()
+    bbox = get_bbox_forestation_analysis(coords)
 
     resolution = (100, 100)
 
