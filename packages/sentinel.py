@@ -422,6 +422,10 @@ def process_forest_data_generate_visualisation() -> dict[str, io.BytesIO]:
         # # vizualisation
         ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
 
+        plt.axis("off")
+
+        for ax in plt.gcf().axes:
+            ax.set_title("")
         # Create a BytesIO object to save the image
         img_buffer = io.BytesIO()
         # tight + 0 pad means no white border on side of pic.
