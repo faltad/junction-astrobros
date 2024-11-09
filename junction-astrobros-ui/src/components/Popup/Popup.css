@@ -1,0 +1,45 @@
+.mapboxgl-popup-content {
+    min-width: 200px;
+  }
+  .route-metric-row {
+    align-items: center;
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    padding-right: 4px 12px;
+  }
+  .row-title {
+    align-items: center;
+    background-color: #4094ae;
+    border: 1px solid #4094ae;
+    border-radius: 16px;
+    color: #ffffff;
+    font-weight: normal;
+    justify-content: center;
+    margin: 0;
+    padding: 4px 12px;
+    text-align: center;
+  }
+  .row-value {
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 0.875rem;
+    padding-right: 16px;
+    text-align: right;
+  }
+  .route-name {
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+  .route-city {
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 0.8rem;
+    margin-bottom: 0;
+    padding: 8px;
+  }
