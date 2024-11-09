@@ -1,0 +1,64 @@
+{
+    "request": {
+        "headers": {
+            "accept": "image/tiff",
+            "content-type": "application/json"
+        },
+        "payload": {
+            "evalscript": "\n    //VERSION=3\n    function setup() {\n        return {\n            input: [\"B08\", \"B04\", \"B03\", \"B02\", \"SCL\"],\n            output: {\n                bands: 4,\n                sampleType: \"INT16\"\n            },\n            mosaicking: \"ORBIT\"\n        }\n    }\n\n    function getFirstQuartileValue(values) {\n        values.sort((a,b) => a-b);\n        return getFirstQuartile(values);\n    }\n\n    function getFirstQuartile(sortedValues) {\n        var index = Math.floor(sortedValues.length / 4);\n        return sortedValues[index];\n    }\n\n    function validate(sample) {\n        // Define codes as invalid:\n        const invalid = [\n            0, // NO_DATA\n            1, // SATURATED_DEFECTIVE\n            3, // CLOUD_SHADOW\n            7, // CLOUD_LOW_PROBA\n            8, // CLOUD_MEDIUM_PROBA\n            9, // CLOUD_HIGH_PROBA\n            10 // THIN_CIRRUS\n        ]\n        return !invalid.includes(sample.SCL)\n    }\n\n    function evaluatePixel(samples) {\n        var valid = samples.filter(validate);\n        if (valid.length > 0 ) {\n            let cloudless = {\n                b08: getFirstQuartileValue(valid.map(s => s.B08)),\n                b04: getFirstQuartileValue(valid.map(s => s.B04)),\n                b03: getFirstQuartileValue(valid.map(s => s.B03)),\n                b02: getFirstQuartileValue(valid.map(s => s.B02)),\n            }\n            let ndvi = ((cloudless.b08 - cloudless.b04) / (cloudless.b08 + cloudless.b04))\n            // This applies a scale factor so the data can be saved as an int\n            let scale = [cloudless.b04, cloudless.b03, cloudless.b02, ndvi].map(v => v*10000);\n            return scale\n        }\n        // If there isn't enough data, return NODATA\n        return [-32768, -32768, -32768, -32768]\n    }\n    ",
+            "input": {
+                "bounds": {
+                    "bbox": [
+                        4364882.796289107,
+                        3166930.4889186244,
+                        4375427.270394539,
+                        3176702.5676735905
+                    ],
+                    "properties": {
+                        "crs": "http://www.opengis.net/def/crs/EPSG/0/3035"
+                    }
+                },
+                "data": [
+                    {
+                        "dataFilter": {
+                            "timeRange": {
+                                "from": "2018-06-01T00:00:00Z",
+                                "to": "2018-09-01T00:00:00Z"
+                            }
+                        },
+                        "type": "sentinel-2-l2a"
+                    }
+                ]
+            },
+            "output": {
+                "responses": [
+                    {
+                        "format": {
+                            "type": "image/tiff"
+                        },
+                        "identifier": "default"
+                    }
+                ],
+                "resx": 100,
+                "resy": 100
+            }
+        },
+        "timestamp": "2024-11-09T16:31:06.683544",
+        "url": "https://sh.dataspace.copernicus.eu/api/v1/process"
+    },
+    "response": {
+        "elapsed": 3.571338,
+        "headers": {
+            "access-control-allow-credentials": "true",
+            "access-control-allow-headers": "origin,content-type,accept,accept-crs,authorization,cache-control",
+            "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH",
+            "access-control-allow-origin": "*",
+            "access-control-max-age": "3600",
+            "content-type": "image/tiff",
+            "date": "Sat, 09 Nov 2024 14:31:03 GMT",
+            "transfer-encoding": "chunked",
+            "x-processingunits-spent": "2.4206160921903574"
+        },
+        "status_code": 200
+    }
+}
