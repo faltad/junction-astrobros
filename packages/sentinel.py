@@ -419,10 +419,12 @@ def process_forest_data_generate_visualisation() -> list[Path]:
 
         # # vizualisation
         ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
-        plt.savefig(file / f"img_{i}", dpi=800, bbox_inches="tight", pad_inches=0)
-        files.append(file / f"img_{i}")
+        plt.savefig(
+            file / f"img_{path.stem}.png", dpi=800, bbox_inches="tight", pad_inches=0
+        )
+        files.append(file / f"img_{path.stem}.png")
 
-    return [file]
+    return files
 
 
 def get_sentinel_image(

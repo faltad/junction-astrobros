@@ -103,7 +103,7 @@ async def send_deforestation_analysis(
         with images_path[i].open("rb") as img_file:
             encoded_bytes = base64.b64encode(img_file.read())
             encoded_string = encoded_bytes.decode("utf-8")
-            content[f"image_{i}"] = encoded_string
+            content[f"{images_path[i].stem}"] = encoded_string
 
     graph_path = process_forest_data_generate_deforestation_rate_graph()
     with graph_path.open("rb") as img_file:
