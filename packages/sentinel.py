@@ -390,7 +390,7 @@ def process_forest_data_generate_deforestation_rate_graph() -> Path:
 def process_forest_data_generate_visualisation() -> list[Path]:
     output_dir = Path("./output")
     output_dir.mkdir(exist_ok=True)  # Create the directory if it doesn't exist
-    file = output_dir / "ndviplot.png"
+    file = output_dir
 
     def add_time_dim(xda):
         # This pre-processes the file to add the correct
@@ -398,26 +398,29 @@ def process_forest_data_generate_visualisation() -> list[Path]:
         year = int(Path(xda.encoding["source"]).stem)
         return xda.expand_dims(year=[year])
 
+    files = []
     tiff_paths = Path("./data").glob("*.tif")
-    ds_s2 = xr.open_mfdataset(
-        tiff_paths,
-        engine="rasterio",
-        preprocess=add_time_dim,
-        band_as_variable=True,
-    )
-    ds_s2 = ds_s2.rename(
-        {
-            "band_1": "R",
-            "band_2": "G",
-            "band_3": "B",
-            "band_4": "NDVI",
-        }
-    )
-    ds_s2 = ds_s2 / 10000
+    for i, path in enumerate(tiff_paths):
+        ds_s2 = xr.open_mfdataset(
+            path,
+            engine="rasterio",
+            preprocess=add_time_dim,
+            band_as_variable=True,
+        )
+        ds_s2 = ds_s2.rename(
+            {
+                "band_1": "R",
+                "band_2": "G",
+                "band_3": "B",
+                "band_4": "NDVI",
+            }
+        )
+        ds_s2 = ds_s2 / 10000
 
-    # # vizualisation
-    ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=3)
-    plt.savefig(file, dpi=800)
+        # # vizualisation
+        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
+        plt.savefig(file / f"img_{i}", dpi=800, bbox_inches="tight", pad_inches=0)
+        files.append(file / f"img_{i}")
 
     return [file]
 
