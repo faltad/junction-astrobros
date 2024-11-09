@@ -1,7 +1,4 @@
-from packages.models import Coords, Seasons
 from packages.sentinel import (
-    get_forestation_analysis,
-    process_forest_data_generate_deforestation_rate_graph,
     process_forest_data_generate_visualisation,
 )
 import config
@@ -9,13 +6,19 @@ import config
 
 def run():
     settings = config.Settings()
-    get_forestation_analysis(
-        settings.prepare_sh_config(),
-        season=Seasons.SUMMER,
-        coords=Coords(latitude=1, longitude=1),
-    )
-    process_forest_data_generate_deforestation_rate_graph()
-    process_forest_data_generate_visualisation()
+    # get_forestation_analysis(
+    #     settings.prepare_sh_config(),
+    #     season=Seasons.SUMMER,
+    #     coords=Coords(
+    #         south_east_latitude=1,
+    #         south_east_longitude=1,
+    #         north_west_latitude=1,
+    #         north_west_longitude=1,
+    #     ),
+    # )
+    # process_forest_data_generate_deforestation_rate_graph()
+    out = process_forest_data_generate_visualisation()
+    print(str(out))
 
 
 if __name__ == "__main__":

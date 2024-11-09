@@ -345,7 +345,11 @@ def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
         request_output_path(request).rename(f"./data/{year}.tif")
 
 
-def process_forest_data_generate_deforestation_rate_graph():
+def process_forest_data_generate_deforestation_rate_graph() -> Path:
+    output_dir = Path("./output")
+    output_dir.mkdir(exist_ok=True)  # Create the directory if it doesn't exist
+    file = output_dir / "graph.png"
+
     def add_time_dim(xda):
         # This pre-processes the file to add the correct
         # year from the filename as the time dimension
@@ -383,49 +387,49 @@ def process_forest_data_generate_deforestation_rate_graph():
     plt.ylabel("Forest Cover [km²]")
     plt.ylim(0)
 
-    # Create a BytesIO object to save the image
-    img_buffer = io.BytesIO()
-    # tight + 0 pad means no white border on side of pic.
-    plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
-    img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
+    plt.savefig(file, dpi=800)
 
-    return img_buffer
+    return file
 
 
-def process_forest_data_generate_visualisation():
+def process_forest_data_generate_visualisation() -> list[Path]:
+    output_dir = Path("./output")
+    output_dir.mkdir(exist_ok=True)  # Create the directory if it doesn't exist
+    file = output_dir
+
     def add_time_dim(xda):
         # This pre-processes the file to add the correct
         # year from the filename as the time dimension
         year = int(Path(xda.encoding["source"]).stem)
         return xda.expand_dims(year=[year])
 
+    files = []
     tiff_paths = Path("./data").glob("*.tif")
-    ds_s2 = xr.open_mfdataset(
-        tiff_paths,
-        engine="rasterio",
-        preprocess=add_time_dim,
-        band_as_variable=True,
-    )
-    ds_s2 = ds_s2.rename(
-        {
-            "band_1": "R",
-            "band_2": "G",
-            "band_3": "B",
-            "band_4": "NDVI",
-        }
-    )
-    ds_s2 = ds_s2 / 10000
+    for i, path in enumerate(tiff_paths):
+        ds_s2 = xr.open_mfdataset(
+            path,
+            engine="rasterio",
+            preprocess=add_time_dim,
+            band_as_variable=True,
+        )
+        ds_s2 = ds_s2.rename(
+            {
+                "band_1": "R",
+                "band_2": "G",
+                "band_3": "B",
+                "band_4": "NDVI",
+            }
+        )
+        ds_s2 = ds_s2 / 10000
 
-    # # vizualisation
-    ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=3)
+        # # vizualisation
+        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
+        plt.savefig(
+            file / f"img_{path.stem}.png", dpi=800, bbox_inches="tight", pad_inches=0
+        )
+        files.append(file / f"img_{path.stem}.png")
 
-    # Create a BytesIO object to save the image
-    img_buffer = io.BytesIO()
-    # tight + 0 pad means no white border on side of pic.
-    plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
-    img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
-
-    return img_buffer
+    return files
 
 
 def get_sentinel_image(
