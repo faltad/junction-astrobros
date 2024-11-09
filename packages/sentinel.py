@@ -353,6 +353,8 @@ def process_forest_data_generate_deforestation_rate_graph() -> io.BytesIO:
         year = int(Path(xda.encoding["source"]).stem)
         return xda.expand_dims(year=[year])
 
+    plt.clf()
+    plt.cla()
     resolution = (100, 100)
     tiff_paths = Path("./data").glob("*.tif")
     ds_s2 = xr.open_mfdataset(
