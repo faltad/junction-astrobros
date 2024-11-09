@@ -1,10 +1,10 @@
-import enum
 import io
 from enum import Enum
 from typing import Optional
 
 import numpy as np
 
+from packages import exceptions
 from packages.models import Coords, DateRange
 
 
@@ -20,7 +20,7 @@ from sentinelhub import (
     SentinelHubRequest,
     bbox_to_dimensions,
 )
-
+import sentinelhub
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +196,10 @@ def get_ndvi_layer(
            return imgVals.concat(samples.dataMask)
         }
     """
-    image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    try:
+        image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    except sentinelhub.exceptions.DownloadFailedException:
+        raise exceptions.SentinelError()
 
     # plot function
     # factor 1/255 to scale between 0-1
