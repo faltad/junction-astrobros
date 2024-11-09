@@ -2,23 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-
 import "mapbox-gl/dist/mapbox-gl.css";
-
 import "./Map.css";
-
 import { Popup } from "../Popup/Popup";
 import { createRoot } from "react-dom/client";
-import {
-  findSWandNECoordinates,
-  SWandNE,
-} from "../../utilities/coordinates-helper";
+import { findSWandNECoordinates } from "../../utilities/coordinates-helper";
 import { useNavigate } from "react-router-dom";
 
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ lat: 0, lon: 0 });
-  const [coordsToQuery, setCoordsToQuery] = useState<SWandNE>(null);
+
+  const navigate = useNavigate();
+
+  let map: mapboxgl.Map | null = null;
+
+  const draw = new MapboxDraw({
+    displayControlsDefault: false,
+    controls: {
+      polygon: true,
+      trash: true,
+    },
+    defaultMode: "draw_polygon",
+  });
 
   useEffect(() => {
     const successCallBack = (position: GeolocationPosition) => {
@@ -34,26 +40,6 @@ export const Map = () => {
     );
   }, []);
 
-  const draw = new MapboxDraw({
-    displayControlsDefault: false,
-    controls: {
-      polygon: true,
-      trash: true,
-    },
-    defaultMode: "draw_polygon",
-  });
-
-  const getFinalCoordinates = () => {
-    const coordsData: GeoJSON.FeatureCollection = draw.getAll();
-    if (coordsData.features.length === 1) {
-      if (coordsData.features[0].geometry.type === "Polygon") {
-        setCoordsToQuery(
-          findSWandNECoordinates(coordsData.features[0].geometry.coordinates)
-        );
-      }
-    }
-  };
-
   useEffect(() => {
     if (!import.meta.env.VITE_MAPBOX_TOKEN) {
       console.error("Mapbox token is not set");
@@ -65,9 +51,13 @@ export const Map = () => {
       return;
     }
 
+    if (map) {
+      map.off("click", addPopUp);
+    }
+
     console.log("COORDS", coords);
 
-    const map = new mapboxgl.Map({
+    map = new mapboxgl.Map({
       container: mapContainerRef.current,
       //style: "mapbox://styles/mapbox/dark-v11",
       style: "mapbox://styles/mapbox/satellite-v9",
@@ -90,11 +80,55 @@ export const Map = () => {
     );
 
     return () => {
+      if (!map) {
+        return;
+      }
+
       map.remove();
     };
   }, [coords]);
 
-  console.log(coordsToQuery);
+  const addPopUp = () => {
+    if (!map) {
+      return;
+    } else {
+      map.off("click", addPopUp);
+    }
+
+    const coordsData: GeoJSON.FeatureCollection = draw.getAll();
+
+    if (coordsData.features.length !== 1) {
+      return;
+    }
+
+    if (coordsData.features[0].geometry.type !== "Polygon") {
+      return;
+    }
+
+    console.log(coordsData.features[0]);
+    const SWNECoords = findSWandNECoordinates(
+      coordsData.features[0].geometry.coordinates
+    );
+
+    const parentNode = document.createElement("div");
+    const root = createRoot(parentNode);
+
+    root.render(<Popup coords={SWNECoords} navigate={navigate}/>);
+
+    new mapboxgl.Popup({ maxWidth: "500px", anchor: "bottom-left" })
+      .setLngLat([SWNECoords!.ne[0], SWNECoords!.ne[1]])
+      .setDOMContent(parentNode)
+      .addTo(map);
+  };
+
+  const getFinalCoordinates = () => {
+    if (!map) {
+      return;
+    } else {
+      map.off("click", addPopUp);
+    }
+    map.on("click", addPopUp);
+  };
 
   return (
     <div
