@@ -9,7 +9,7 @@ import "./DetailedPage.css";
 import Spinner from "../LoadingSpinner/LoadingSpinner";
 import { ButtonGroup } from "../ButtonGroup/ButtonGroup";
 
-type Season = "winter" | "spring" | "summer" | "autumn";
+export type Season = "winter" | "spring" | "summer" | "autumn";
 
 interface FetchImageParams {
   southWestLat: string;
@@ -83,6 +83,7 @@ export const DetailPage = () => {
   const loaderData = useLoaderData() as { imagePromise: unknown };
   console.log(loaderData);
   return (
+    <>
     <Suspense
       fallback={
         <div
@@ -122,5 +123,7 @@ export const DetailPage = () => {
         )}
       </Await>
     </Suspense>
+    
+    </>
   );
 };

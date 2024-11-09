@@ -1,34 +1,45 @@
 import { useSearchParams } from "react-router-dom";
 import "./ButtonGroup.css";
+import { Season } from "../DetailPage/DetailsPage";
 
 export const ButtonGroup = () => {
-  const [, setSearchParams] = useSearchParams({ season: "spring" });
+  const [searchParams, setSearchParams] = useSearchParams({ season: "spring" });
+  console.log("searchParams", searchParams);
+
+  const handleOnClick = (season: Season) => {
+    if (!searchParams.get("season")) {
+        setSearchParams({ season });
+      return;
+    }
+    searchParams.set("season", season);
+    setSearchParams(searchParams);
+  }
 
   return (
     <div className="button-group">
       <button
-        onClick={() => setSearchParams({ season: "winter" })}
+        onClick={() => handleOnClick('winter')}
         className="button"
       >
         Winter
       </button>
       <button
-        onClick={() => setSearchParams({ season: "spring" })}
-        className="button active"
+        onClick={() => handleOnClick('spring')}
+        className="button"
       >
         Spring
       </button>
       <button
-        onClick={() => setSearchParams({ season: "summer" })}
+        onClick={() => handleOnClick('summer')}
         className="button"
       >
         Summer
       </button>
       <button
-        onClick={() => setSearchParams({ season: "winter" })}
+        onClick={() => handleOnClick('autumn')}
         className="button"
       >
-        Winter
+        Autumn
       </button>
     </div>
   );
