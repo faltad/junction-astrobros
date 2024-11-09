@@ -2,11 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-
 import "mapbox-gl/dist/mapbox-gl.css";
-
 import "./Map.css";
-
 import { Popup } from "../Popup/Popup";
 import { createRoot } from "react-dom/client";
 import {
@@ -14,10 +11,21 @@ import {
   SWandNE,
 } from "../../utilities/coordinates-helper";
 
+const addPopUp = (map: mapboxgl.Map, SWNECoords: SWandNE) => {
+  const parentNode = document.createElement("div");
+  const root = createRoot(parentNode);
+
+  root.render(<Popup coords={SWNECoords} />);
+
+  new mapboxgl.Popup({ maxWidth: "500px", anchor: "bottom-left" })
+    .setLngLat([SWNECoords!.ne[0], SWNECoords!.ne[1]])
+    .setDOMContent(parentNode)
+    .addTo(map);
+};
+
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ lat: 0, lon: 0 });
-  const [coordsToQuery, setCoordsToQuery] = useState<SWandNE>(null);
 
   useEffect(() => {
     const successCallBack = (position: GeolocationPosition) => {
@@ -42,13 +50,19 @@ export const Map = () => {
     defaultMode: "draw_polygon",
   });
 
-  const getFinalCoordinates = () => {
+  const getFinalCoordinates = (map: mapboxgl.Map) => {
     const coordsData: GeoJSON.FeatureCollection = draw.getAll();
     if (coordsData.features.length === 1) {
       if (coordsData.features[0].geometry.type === "Polygon") {
-        setCoordsToQuery(
-          findSWandNECoordinates(coordsData.features[0].geometry.coordinates)
+        console.log(coordsData.features[0]);
+        const SWNECoords = findSWandNECoordinates(
+          coordsData.features[0].geometry.coordinates
         );
+        map.on("click", () => addPopUp(map, SWNECoords));
+        setTimeout(() => {
+          console.log("WtF");
+          map.off("click", () => addPopUp(map, SWNECoords));
+        }, 100);
       }
     }
   };
@@ -76,7 +90,7 @@ export const Map = () => {
 
     map.addControl(draw);
 
-    map.on("draw.create", getFinalCoordinates);
+    map.on("draw.create", () => getFinalCoordinates(map));
 
     map.addControl(
       new mapboxgl.GeolocateControl({
@@ -92,8 +106,6 @@ export const Map = () => {
       map.remove();
     };
   }, [coords]);
-
-  console.log(coordsToQuery);
 
   return (
     <div

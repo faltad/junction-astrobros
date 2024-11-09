@@ -1,17 +1,18 @@
 import "./Popup.css";
 
 import placeHolderImage from "../../assets/fig2.jpg";
+import { SWandNE } from "../../utilities/coordinates-helper";
 
 type PopupProps = {
-  swCoord: string;
-  neCoord: string;
+  coords: SWandNE;
 };
 
-export const Popup = ({ swCoord, neCoord }: PopupProps) => {
+export const Popup = ({ coords }: PopupProps) => {
+  console.log("In popup");
   //   const navigate = useNavigate();
 
   const hanleOnClick = () => {
-    const toPath = `/image?swcoord=${swCoord}&neCoord=${neCoord}`;
+    const toPath = `/image?swcoord=${coords?.sw}&neCoord=${coords?.ne}`;
     console.log("toPath", toPath);
     // navigate(toPath);
   };
