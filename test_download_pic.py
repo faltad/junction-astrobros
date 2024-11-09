@@ -5,33 +5,14 @@
 # ]
 # ///
 import sys
-
-
-# Your client credentials
-# client_id = '<client_id>'
-# client_secret = '<secret>'
-
-# Create a session
-# client = BackendApplicationClient(client_id=client_id)
-# oauth = OAuth2Session(client=client)
-
-# Get token for the session
-# token = oauth.fetch_token(token_url='https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token',
-#                          client_secret=client_secret, include_client_id=True)
-
-# All requests using this session will have an access token automatically added
-# resp = oauth.get("https://sh.dataspace.copernicus.eu/configuration/v1/wms/instances")
-# print(resp.content)
-
-from typing import Any, Optional, Tuple
-
-import matplotlib.pyplot as plt
-import numpy as np
+from datetime import datetime
+from random import random
 
 from sentinelhub import SHConfig
 
-from packages.models import Coords
-from packages.sentinel import get_true_colors_sentinel2
+from packages.models import Coords, DateRange
+from packages.sentinel import get_true_colors, get_ndvi_layer
+
 
 def prepare_config(client_id: str, client_secret: str) -> SHConfig:
     config = SHConfig()
@@ -46,10 +27,34 @@ def prepare_config(client_id: str, client_secret: str) -> SHConfig:
 def main(client_id: str, secret: str):
     config = prepare_config(client_id, secret)
 
-    betsiboka_coords = Coords(latitude=46.16, longitude=-16.15)
-    random_helsinki_coords = Coords(latitude=24.846971, longitude=60.173445)
-    pic = get_true_colors_sentinel2(random_helsinki_coords, config)
+    betsiboka_coords = Coords(
+        south_east_latitude=46.16,
+        south_east_longitude=-16.15,
+        north_west_latitude=46.51,
+        north_west_longitude=-15.79,
+    )
+    random_helsinki_coords = Coords(
+        south_east_latitude=24.795581,
+        south_east_longitude=60.138594,
+        north_west_latitude=25.033369,
+        north_west_longitude=60.229115,
+    )
+
+    colombia_coords = Coords(
+        south_east_latitude=-72.639688,
+        south_east_longitude=1.792517,
+        north_west_latitude=-72.598106,
+        north_west_longitude=1.820838,
+    )
+    coords = colombia_coords
+    daterange = DateRange(
+        start_date=datetime(2024, 9, 12), end_date=datetime(2024, 9, 21)
+    )
+    pic = get_true_colors(coords, daterange, config)
     with open("output_image.png", "wb") as f:
+        f.write(pic.getvalue())
+    pic = get_ndvi_layer(coords, daterange, config)
+    with open("image_ndvi.png", "wb") as f:
         f.write(pic.getvalue())
 
 
