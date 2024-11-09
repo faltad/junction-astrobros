@@ -70,10 +70,10 @@ def plot_image(
 def prepare_bbox(coords: Coords) -> BBox:
     # hardcoded bounding box for now
     coords_wgs84 = (
-        coords.south_east_longitude,
-        coords.south_east_latitude,
-        coords.north_west_longitude,
-        coords.north_west_latitude,
+        coords.south_west_longitude,
+        coords.south_west_latitude,
+        coords.north_east_longitude,
+        coords.north_east_latitude,
     )
     return BBox(bbox=coords_wgs84, crs=CRS.WGS84)
 
@@ -214,10 +214,10 @@ def get_ndvi_layer(
 
 def get_bbox_forestation_analysis(coords: Coords) -> BBox:
     coords_wgs84 = (
-        coords.south_east_longitude,
-        coords.south_east_latitude,
-        coords.north_west_longitude,
-        coords.north_west_latitude,
+        coords.south_west_longitude,
+        coords.south_west_latitude,
+        coords.north_east_longitude,
+        coords.north_east_latitude,
     )
     epsg = 3035
     # Convert to 3035 to get crs with meters as units

@@ -18,23 +18,23 @@ def main():
     config = Settings().prepare_sh_config()
 
     betsiboka_coords = Coords(
-        south_east_latitude=46.16,
-        south_east_longitude=-16.15,
-        north_west_latitude=46.51,
-        north_west_longitude=-15.79,
+        south_west_latitude=46.16,
+        south_west_longitude=-16.15,
+        north_east_latitude=46.51,
+        north_east_longitude=-15.79,
     )
     random_helsinki_coords = Coords(
-        south_east_latitude=24.795581,
-        south_east_longitude=60.138594,
-        north_west_latitude=25.033369,
-        north_west_longitude=60.229115,
+        south_west_latitude=24.795581,
+        south_west_longitude=60.138594,
+        north_east_latitude=25.033369,
+        north_east_longitude=60.229115,
     )
 
     colombia_coords = Coords(
-        south_east_latitude=-72.639688,
-        south_east_longitude=1.792517,
-        north_west_latitude=-72.598106,
-        north_west_longitude=1.820838,
+        south_west_latitude=-72.639688,
+        south_west_longitude=1.792517,
+        north_east_latitude=-72.598106,
+        north_east_longitude=1.820838,
     )
     coords = random_helsinki_coords
     daterange = DateRange(

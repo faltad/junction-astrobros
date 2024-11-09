@@ -42,10 +42,10 @@ async def get_image(
     layer: AvailableLayers = AvailableLayers.TRUE_COLORS,
 ):
     coords = Coords(
-        north_west_longitude=north_west_long,
-        north_west_latitude=north_west_lat,
-        south_east_longitude=south_east_long,
-        south_east_latitude=south_east_lat,
+        north_east_longitude=north_west_long,
+        north_east_latitude=north_west_lat,
+        south_west_longitude=south_east_long,
+        south_west_latitude=south_east_lat,
     )
     date_range = DateRange(start_date, end_date)
     settings = settings.prepare_sh_config()
@@ -83,10 +83,10 @@ async def send_deforestation_analysis(
     season: Seasons,
 ):
     coords = Coords(
-        north_west_longitude=north_west_long,
-        north_west_latitude=north_west_lat,
-        south_east_longitude=south_east_long,
-        south_east_latitude=south_east_lat,
+        north_east_longitude=north_west_long,
+        north_east_latitude=north_west_lat,
+        south_west_longitude=south_east_long,
+        south_west_latitude=south_east_lat,
     )
     get_forestation_analysis(settings.prepare_sh_config(), season=season, coords=coords)
 

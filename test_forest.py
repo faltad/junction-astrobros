@@ -13,10 +13,10 @@ def run():
         settings.prepare_sh_config(),
         season=Seasons.SUMMER,
         coords=Coords(
-            south_east_latitude=24.3917701,
-            south_east_longitude=60.246912,
-            north_west_latitude=24.729401,
-            north_west_longitude=60.364885,
+            south_west_latitude=24.3917701,
+            south_west_longitude=60.246912,
+            north_east_latitude=24.729401,
+            north_east_longitude=60.364885,
         ),
     )
     # process_forest_data_generate_visualisation()
