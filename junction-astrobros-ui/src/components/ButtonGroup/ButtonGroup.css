@@ -1,0 +1,52 @@
+/* Button Group Container */
+.button-group {
+    display: inline-flex;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+/* Button Styles */
+.button-group button {
+    background-color: #333; /* Dark gray background */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.button-group button:not(:last-child) {
+    border-right: 1px solid #444; /* Subtle divider between buttons */
+}
+
+/* Hover effect */
+.button-group button:hover {
+    background-color: #555; /* Slightly lighter gray for hover */
+}
+
+/* Active/Focused state */
+.button-group button:active,
+.button-group button:focus {
+    outline: none;
+    background-color: #222; /* Even darker gray for active/focused */
+}
+
+/* Optional: Disabled button style */
+.button-group button:disabled {
+    background-color: #777; /* Light gray for disabled */
+    color: #bbb;
+    cursor: not-allowed;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .button-group button:not(:last-child) {
+        border-right: none;
+        border-bottom: 1px solid #444;
+    }
+}

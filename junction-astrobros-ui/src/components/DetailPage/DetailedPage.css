@@ -36,3 +36,8 @@
   color: #555;
   margin-top: 5px;
 }
+
+.button-group-container {
+  display: flex;
+  justify-content: center;
+}
