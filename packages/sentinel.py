@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from packages.models import Coords
+from packages.models import Coords, DateRange
 
 
 import logging
@@ -21,6 +21,8 @@ from sentinelhub import (
 
 
 logger = logging.getLogger(__name__)
+
+DATEFORMAT = "%Y-%m-%d"
 
 
 def plot_image(
@@ -73,10 +75,15 @@ def calculate_size(bbox: BBox) -> tuple[int, int]:
     return size
 
 
-def get_true_colors_sentinel2(coords: Coords, config: SHConfig) -> io.BytesIO:
+def get_true_colors_sentinel2(
+    coords: Coords, date_range: DateRange, config: SHConfig
+) -> io.BytesIO:
     """Returns a file-like object with the true colors picture."""
     bbox = prepare_bbox(coords)
     size = calculate_size(bbox)
+    start_date = date_range.start_date.strftime(DATEFORMAT)
+    end_date = date_range.end_date.strftime(DATEFORMAT)
+
     evalscript_true_color = """
             //VERSION=3
 
@@ -103,8 +110,7 @@ def get_true_colors_sentinel2(coords: Coords, config: SHConfig) -> io.BytesIO:
                 data_collection=DataCollection.SENTINEL2_L1C.define_from(
                     "s2l1c", service_url=config.sh_base_url
                 ),
-                #                time_interval=("2020-06-12", "2020-06-13"),
-                time_interval=("2024-10-23", "2024-10-24"),
+                time_interval=(start_date, end_date),
             )
         ],
         responses=[SentinelHubRequest.output_response("default", MimeType.PNG)],
