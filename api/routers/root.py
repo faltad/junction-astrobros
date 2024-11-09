@@ -33,19 +33,19 @@ def root():
 )
 async def get_image(
     settings: Annotated[config.Settings, Depends(get_settings)],
-    south_east_lat: float,
-    south_east_long: float,
-    north_west_lat: float,
-    north_west_long: float,
+    south_west_lat: float,
+    south_west_long: float,
+    north_east_lat: float,
+    north_east_long: float,
     start_date: datetime,
     end_date: datetime,
     layer: AvailableLayers = AvailableLayers.TRUE_COLORS,
 ):
     coords = Coords(
-        north_east_longitude=north_west_long,
-        north_east_latitude=north_west_lat,
-        south_west_longitude=south_east_long,
-        south_west_latitude=south_east_lat,
+        north_east_longitude=north_east_long,
+        north_east_latitude=north_east_lat,
+        south_west_longitude=south_west_long,
+        south_west_latitude=south_west_lat,
     )
     date_range = DateRange(start_date, end_date)
     settings = settings.prepare_sh_config()
