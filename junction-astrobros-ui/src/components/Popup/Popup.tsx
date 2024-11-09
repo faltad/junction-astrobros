@@ -15,8 +15,7 @@ interface FetchImageParams {
   southWestLong: number;
   northEastLat: number;
   northEastLong: number;
-  startDate: string; // ISO date format string
-  endDate: string; // ISO date format string
+  date: string; // ISO date format string
   layer?: string; // Optional, defaults to "true_colors"
 }
 
@@ -25,19 +24,17 @@ async function fetchImage({
   southWestLong,
   northEastLat,
   northEastLong,
-  startDate,
-  endDate,
+  date,
   layer = "true_colors", // Default to "true_colors" if not provided
 }: FetchImageParams) {
-  const url = new URL("http://10.87.1.83:8000/image");
+  const url = new URL("http://172.20.10.3:8000/image");
 
   // Set query parameters
   url.searchParams.append("south_west_lat", southWestLat.toString());
   url.searchParams.append("south_west_long", southWestLong.toString());
   url.searchParams.append("north_east_lat", northEastLat.toString());
   url.searchParams.append("north_east_long", northEastLong.toString());
-  url.searchParams.append("start_date", startDate);
-  url.searchParams.append("end_date", endDate);
+  url.searchParams.append("date", date);
   url.searchParams.append("layer", layer);
 
   try {
@@ -62,7 +59,7 @@ async function fetchImage({
 }
 
 export const Popup = ({ coords, navigate }: PopupProps) => {
-    const [img, setImg] = useState<string>("");
+  const [img, setImg] = useState<string>("");
 
   const hanleOnClick = () => {
     const toPath = `/map/details?swcoordlat=${coords?.sw[0]}&swcoordlon=${coords?.sw[1]}&necoordlat=${coords?.ne[0]}&necoordlon=${coords?.ne[1]}`;
@@ -75,8 +72,7 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
       southWestLong: coords!.sw[0],
       northEastLat: coords!.ne[1],
       northEastLong: coords!.ne[0],
-      startDate: "2023-01-01",
-      endDate: "2023-01-07",
+      date: "2023-01-01",
       layer: "ndvi",
     })
       .then((data) => setImg(URL.createObjectURL(data)))
@@ -87,7 +83,7 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
 
   return (
     <div className="popup">
-      {img && <img src={img} />}
+      {img && <img className="layer-img" src={img} />}
       {!img && <Spinner />}
       <button onClick={hanleOnClick} className="popup-button">
         Get more details

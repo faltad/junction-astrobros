@@ -13,7 +13,7 @@ export default defineConfig({
     cors: false,
     proxy: {
       "/styles": "https://api.mapbox.com",
-      "/image": "http://10.87.1.83:8000",
+      "/image": "http://172.20.10.3:8000",
     },
   },
   assetsInclude: ["**/*.JPG"],

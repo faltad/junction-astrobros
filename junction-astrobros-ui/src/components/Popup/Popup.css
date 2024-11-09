@@ -80,3 +80,7 @@
   -webkit-user-select: none;
   touch-action: manipulation;
 }
+
+.layer-img {
+  width: 100%;
+}
