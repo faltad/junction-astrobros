@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from packages.models import Coords
+from packages.models import Coords, DateRange
 
 
 import logging
@@ -21,6 +21,8 @@ from sentinelhub import (
 
 
 logger = logging.getLogger(__name__)
+
+DATEFORMAT = "%Y-%m-%d"
 
 
 def plot_image(
@@ -75,11 +77,36 @@ def calculate_size(bbox: BBox) -> tuple[int, int]:
     logger.info(f"Image shape at {resolution}m resolution: {size} pixels")
     return size
 
-
-def get_true_colors(coords: Coords, config: SHConfig) -> io.BytesIO:
-    """Returns a file-like object with the true colors picture."""
+def _make_sentinel_request(date_range: DateRange, evalscript: str, config: SHConfig, coords: Coords):
     bbox = prepare_bbox(coords)
     size = calculate_size(bbox)
+    start_date = date_range.start_date.strftime(DATEFORMAT)
+    end_date = date_range.end_date.strftime(DATEFORMAT)
+    r = SentinelHubRequest(
+        evalscript=evalscript,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL2_L1C.define_from(
+                    "s2l1c", service_url=config.sh_base_url
+                ),
+                time_interval=(start_date, end_date),
+            )
+        ],
+        responses=[SentinelHubRequest.output_response("default", MimeType.PNG)],
+        bbox=bbox,
+        size=size,
+        config=config,
+    )
+    imgs = r.get_data()
+    # TODO: beware of no pictures and so on. This works only in case we want to show most recent
+    image = imgs[0]
+    return image
+
+def get_true_colors(
+    coords: Coords, date_range: DateRange, config: SHConfig
+) -> io.BytesIO:
+    """Returns a file-like object with the true colors picture."""
+
     evalscript_true_color = """
             //VERSION=3
 
@@ -99,24 +126,7 @@ def get_true_colors(coords: Coords, config: SHConfig) -> io.BytesIO:
             }
         """
 
-    request_true_color = SentinelHubRequest(
-        evalscript=evalscript_true_color,
-        input_data=[
-            SentinelHubRequest.input_data(
-                data_collection=DataCollection.SENTINEL2_L1C.define_from(
-                    "s2l1c", service_url=config.sh_base_url
-                ),
-                #time_interval=("2024-10-23", "2024-10-24"),
-                time_interval=("2023-10-14", "2023-10-26"),
-            )
-        ],
-        responses=[SentinelHubRequest.output_response("default", MimeType.PNG)],
-        bbox=bbox,
-        size=size,
-        config=config,
-    )
-    true_color_imgs = request_true_color.get_data()
-    image = true_color_imgs[0]
+    image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
 
     # plot function
     # factor 1/255 to scale between 0-1
@@ -124,7 +134,7 @@ def get_true_colors(coords: Coords, config: SHConfig) -> io.BytesIO:
     return plot_image(image, factor=3.5 / 255, clip_range=(0, 1))
 
 
-def get_ndvi_layer(coords: Coords, config: SHConfig) -> io.BytesIO:
+def get_ndvi_layer(coords: Coords, date_range: DateRange, config: SHConfig) -> io.BytesIO:
     """
     Normalized difference vegetation index
     The value range of the NDVI is -1 to 1. Negative values of NDVI (values approaching -1) correspond to water.
@@ -132,8 +142,6 @@ def get_ndvi_layer(coords: Coords, config: SHConfig) -> io.BytesIO:
       Low, positive values represent shrub and grassland (approximately 0.2 to 0.4), while high values indicate
       temperate and tropical rainforests (values approaching 1). It is a good proxy for live green vegetation.
     """
-    bbox = prepare_bbox(coords)
-    size = calculate_size(bbox)
     evalscript_true_color = """
         function setup() {
            return {
@@ -174,25 +182,8 @@ def get_ndvi_layer(coords: Coords, config: SHConfig) -> io.BytesIO:
            return imgVals.concat(samples.dataMask)
         }
     """
+    image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
 
-    request_true_color = SentinelHubRequest(
-        evalscript=evalscript_true_color,
-        input_data=[
-            SentinelHubRequest.input_data(
-                data_collection=DataCollection.SENTINEL2_L1C.define_from(
-                    "s2l1c", service_url=config.sh_base_url
-                ),
-                # time_interval=("2024-10-23", "2024-10-24"),
-                time_interval=("2024-10-14", "2024-10-26"),
-            )
-        ],
-        responses=[SentinelHubRequest.output_response("default", MimeType.PNG)],
-        bbox=bbox,
-        size=size,
-        config=config,
-    )
-    true_color_imgs = request_true_color.get_data()
-    image = true_color_imgs[0]
 
     # plot function
     # factor 1/255 to scale between 0-1

@@ -5,11 +5,11 @@
 # ]
 # ///
 import sys
-
+from datetime import datetime
 
 from sentinelhub import SHConfig
 
-from packages.models import Coords
+from packages.models import Coords, DateRange
 from packages.sentinel import get_true_colors, get_ndvi_layer
 
 
@@ -30,10 +30,11 @@ def main(client_id: str, secret: str):
     random_helsinki_coords = Coords(latitude=24.846971, longitude=60.173445)
     colombia_coords = Coords(latitude=-75.000761, longitude=3.703350)
     coords = colombia_coords
-    pic = get_true_colors(coords, config)
+    daterange = DateRange(start_date=datetime(2024, 10, 12), end_date=datetime(2024, 10, 15))
+    pic = get_true_colors(coords, daterange, config)
     with open("output_image.png", "wb") as f:
         f.write(pic.getvalue())
-    pic = get_ndvi_layer(coords, config)
+    pic = get_ndvi_layer(coords, daterange, config)
     with open("image_ndvi.png", "wb") as f:
         f.write(pic.getvalue())
 
