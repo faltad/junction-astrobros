@@ -6,6 +6,9 @@ import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import "./Map.css";
+
+import { Popup } from "../Popup/Popup";
+import { createRoot } from "react-dom/client";
 import {
   findSWandNECoordinates,
   SWandNE,

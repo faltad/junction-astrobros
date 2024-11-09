@@ -1,9 +1,0 @@
-.app {
-  display: flex;
-  height: 100vh;
-}
-
-.mapWrapper {
-  position: relative;
-  flex: 1;
-}

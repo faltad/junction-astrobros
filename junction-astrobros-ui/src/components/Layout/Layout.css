@@ -1,0 +1,13 @@
+.app {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 200px;
+  }
+  
+  .mapWrapper {
+    position: relative;
+    flex: 1;
+  }
