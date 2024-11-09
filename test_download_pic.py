@@ -4,28 +4,18 @@
 #   "rich",
 # ]
 # ///
-import sys
 from datetime import datetime
 from random import random
 
-from sentinelhub import SHConfig
 
 from packages.models import Coords, DateRange
 from packages.sentinel import get_true_colors, get_ndvi_layer
 
-
-def prepare_config(client_id: str, client_secret: str) -> SHConfig:
-    config = SHConfig()
-    config.sh_client_id = client_id
-    config.sh_client_secret = client_secret
-    config.sh_token_url = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
-    config.sh_base_url = "https://sh.dataspace.copernicus.eu"
-    config.save("cdse")
-    return config
+from config import Settings
 
 
-def main(client_id: str, secret: str):
-    config = prepare_config(client_id, secret)
+def main():
+    config = Settings().prepare_sh_config()
 
     betsiboka_coords = Coords(
         south_east_latitude=46.16,
@@ -59,6 +49,11 @@ def main(client_id: str, secret: str):
 
 
 if __name__ == "__main__":
+    main()
+    if len(sys.argv) < 3:
+        print("Please run script with id + password as argument")
+    else:
+        main(sys.argv[1], sys.argv[2])
     if len(sys.argv) < 3:
         print("Please run script with id + password as argument")
     else:

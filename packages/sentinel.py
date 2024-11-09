@@ -1,13 +1,15 @@
-import io
 from enum import Enum
+import io
+from datetime import datetime
 from typing import Optional
-
+import xarray as xr
 import numpy as np
 
-from packages import exceptions
-from packages.models import Coords, DateRange
+from packages.models import Coords, DateRange, Seasons
 
+from ipyleaflet import GeoJSON, Map, basemaps
 
+from pathlib import Path
 import logging
 import matplotlib.pyplot as plt
 
@@ -19,6 +21,7 @@ from sentinelhub import (
     MimeType,
     SentinelHubRequest,
     bbox_to_dimensions,
+    SentinelHubDownloadClient,
 )
 import sentinelhub
 
@@ -205,6 +208,219 @@ def get_ndvi_layer(
     # factor 1/255 to scale between 0-1
     # factor 1 to not over brighten the picture
     return plot_image(image, factor=1 / 255, clip_range=(0, 1))
+
+
+def get_bbox_forestation_analysis() -> BBox:
+    # Desired resolution of our data
+    bbox_coords = [10.633501, 51.611195, 10.787234, 51.698098]
+    epsg = 3035
+    # Convert to 3035 to get crs with meters as units
+    bbox = BBox(bbox_coords, CRS(4326)).transform(epsg)
+
+    x, y = bbox.transform(4326).middle
+
+    overview_map = Map(basemap=basemaps.OpenStreetMap.Mapnik, center=(y, x), zoom=10)
+    # Add geojson data
+    geo_json = GeoJSON(data=bbox.transform(4326).geojson)
+    overview_map.add_layer(geo_json)
+    return bbox
+
+
+def get_forestation_eval_script():
+    return """
+    //VERSION=3
+    function setup() {
+        return {
+            input: ["B08", "B04", "B03", "B02", "SCL"],
+            output: {
+                bands: 4,
+                sampleType: "INT16"
+            },
+            mosaicking: "ORBIT"
+        }
+    }
+
+    function getFirstQuartileValue(values) {
+        values.sort((a,b) => a-b);
+        return getFirstQuartile(values);
+    }
+
+    function getFirstQuartile(sortedValues) {
+        var index = Math.floor(sortedValues.length / 4);
+        return sortedValues[index];
+    }
+
+    function validate(sample) {
+        // Define codes as invalid:
+        const invalid = [
+            0, // NO_DATA
+            1, // SATURATED_DEFECTIVE
+            3, // CLOUD_SHADOW
+            7, // CLOUD_LOW_PROBA
+            8, // CLOUD_MEDIUM_PROBA
+            9, // CLOUD_HIGH_PROBA
+            10 // THIN_CIRRUS
+        ]
+        return !invalid.includes(sample.SCL)
+    }
+
+    function evaluatePixel(samples) {
+        var valid = samples.filter(validate);
+        if (valid.length > 0 ) {
+            let cloudless = {
+                b08: getFirstQuartileValue(valid.map(s => s.B08)),
+                b04: getFirstQuartileValue(valid.map(s => s.B04)),
+                b03: getFirstQuartileValue(valid.map(s => s.B03)),
+                b02: getFirstQuartileValue(valid.map(s => s.B02)),
+            }
+            let ndvi = ((cloudless.b08 - cloudless.b04) / (cloudless.b08 + cloudless.b04))
+            // This applies a scale factor so the data can be saved as an int
+            let scale = [cloudless.b04, cloudless.b03, cloudless.b02, ndvi].map(v => v*10000);
+            return scale
+        }
+        // If there isn't enough data, return NODATA
+        return [-32768, -32768, -32768, -32768]
+    }
+    """
+
+
+def get_interval_of_interest(season: Seasons, year: int) -> tuple[datetime, datetime]:
+    match season:
+        case Seasons.SUMMER:
+            return (datetime(year, 6, 1), datetime(year, 9, 1))
+        case Seasons.AUTUMN:
+            return (datetime(year, 9, 1), datetime(year, 11, 1))
+        case Seasons.SPRING:
+            return (datetime(year, 3, 1), datetime(year, 6, 1))
+        case Seasons.WINTER:
+            return (datetime(year, 11, 1), datetime(year, 3, 1))
+        case _:
+            return (datetime(year, 6, 1), datetime(year, 9, 1))
+
+
+def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
+    bbox = get_bbox_forestation_analysis()
+
+    resolution = (100, 100)
+
+    def get_request(year, config: SHConfig):
+        time_interval = get_interval_of_interest(season=season, year=year)
+        return SentinelHubRequest(
+            evalscript=get_forestation_eval_script(),
+            input_data=[
+                SentinelHubRequest.input_data(
+                    data_collection=DataCollection.SENTINEL2_L2A.define_from(
+                        "s2", service_url=config.sh_base_url
+                    ),
+                    time_interval=time_interval,
+                )
+            ],
+            responses=[SentinelHubRequest.output_response("default", MimeType.TIFF)],
+            bbox=bbox,
+            resolution=resolution,
+            config=config,
+            data_folder="./data",
+        )
+
+    # create a dictionary of requests
+    sh_requests = {}
+    for year in range(2018, 2024):
+        sh_requests[year] = get_request(year, config)
+
+    list_of_requests = [request.download_list[0] for request in sh_requests.values()]
+
+    # download data with multiple threads
+    SentinelHubDownloadClient(config=config).download(list_of_requests, max_threads=7)
+
+    def request_output_path(request):
+        # Gets the full path to the output from a request
+        return Path(request.data_folder, request.get_filename_list()[0])
+
+    for year, request in sh_requests.items():
+        request_output_path(request).rename(f"./data/{year}.tif")
+
+
+def process_forest_data_generate_deforestation_rate_graph():
+    def add_time_dim(xda):
+        # This pre-processes the file to add the correct
+        # year from the filename as the time dimension
+        year = int(Path(xda.encoding["source"]).stem)
+        return xda.expand_dims(year=[year])
+
+    resolution = (100, 100)
+    tiff_paths = Path("./data").glob("*.tif")
+    ds_s2 = xr.open_mfdataset(
+        tiff_paths,
+        engine="rasterio",
+        preprocess=add_time_dim,
+        band_as_variable=True,
+    )
+    ds_s2 = ds_s2.rename(
+        {
+            "band_1": "R",
+            "band_2": "G",
+            "band_3": "B",
+            "band_4": "NDVI",
+        }
+    )
+    ds_s2 = ds_s2 / 10000
+
+    def to_km2(dataarray, resolution):
+        # Calculate forest area
+        return dataarray * np.prod(list(resolution)) / 1e6
+
+    # analysis
+    ds_s2["FOREST"] = ds_s2.NDVI > 0.7
+    forest_pixels = ds_s2.FOREST.sum(["x", "y"])
+    forest_area_km2 = to_km2(forest_pixels, resolution)
+    forest_area_km2.plot()
+    plt.title("Forest Cover")
+    plt.ylabel("Forest Cover [km²]")
+    plt.ylim(0)
+
+    # Create a BytesIO object to save the image
+    img_buffer = io.BytesIO()
+    # tight + 0 pad means no white border on side of pic.
+    plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
+    img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
+
+    return img_buffer
+
+
+def process_forest_data_generate_visualisation():
+    def add_time_dim(xda):
+        # This pre-processes the file to add the correct
+        # year from the filename as the time dimension
+        year = int(Path(xda.encoding["source"]).stem)
+        return xda.expand_dims(year=[year])
+
+    tiff_paths = Path("./data").glob("*.tif")
+    ds_s2 = xr.open_mfdataset(
+        tiff_paths,
+        engine="rasterio",
+        preprocess=add_time_dim,
+        band_as_variable=True,
+    )
+    ds_s2 = ds_s2.rename(
+        {
+            "band_1": "R",
+            "band_2": "G",
+            "band_3": "B",
+            "band_4": "NDVI",
+        }
+    )
+    ds_s2 = ds_s2 / 10000
+
+    # # vizualisation
+    ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=3)
+
+    # Create a BytesIO object to save the image
+    img_buffer = io.BytesIO()
+    # tight + 0 pad means no white border on side of pic.
+    plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
+    img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
+
+    return img_buffer
 
 
 def get_sentinel_image(
