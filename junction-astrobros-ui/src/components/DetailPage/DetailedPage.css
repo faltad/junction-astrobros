@@ -1,0 +1,38 @@
+/* Main container with grid layout */
+.container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 10px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Styling for individual image items with captions */
+.image-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Styling for images within the grid */
+.container img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Title styling, spanning across all columns */
+.title {
+  grid-column: span 3;
+  font-size: 1.5rem;
+  margin: 10px 0;
+}
+
+/* Caption styling */
+.caption {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 5px;
+}
