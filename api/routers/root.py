@@ -91,10 +91,10 @@ async def send_deforestation_analysis(
     season: Seasons,
 ):
     coords = Coords(
-        north_east_longitude=north_east_long,
-        north_east_latitude=north_east_lat,
         south_west_longitude=south_west_long,
         south_west_latitude=south_west_lat,
+        north_east_longitude=north_east_long,
+        north_east_latitude=north_east_lat,
     )
     get_forestation_analysis(settings.prepare_sh_config(), season=season, coords=coords)
 
