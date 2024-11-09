@@ -58,7 +58,15 @@ export const Map = () => {
     <div
       id="map-container"
       ref={mapContainerRef}
-      style={{ position: "absolute", top: 0, bottom: 0, width: "100%" }}
+      style={{
+        position: "absolute",
+        top: 32,
+        bottom: 32,
+        right: 24,
+        overflow: "hidden",
+        borderRadius: 50,
+        width: "100%",
+      }}
     />
   );
 };
