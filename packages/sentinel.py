@@ -23,7 +23,7 @@ from sentinelhub import (
     bbox_to_dimensions,
     SentinelHubDownloadClient,
 )
-
+import sentinelhub
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +199,10 @@ def get_ndvi_layer(
            return imgVals.concat(samples.dataMask)
         }
     """
-    image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    try:
+        image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    except sentinelhub.exceptions.DownloadFailedException:
+        raise exceptions.SentinelError()
 
     # plot function
     # factor 1/255 to scale between 0-1

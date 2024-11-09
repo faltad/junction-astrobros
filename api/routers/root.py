@@ -1,14 +1,15 @@
 import logging
 from typing import Annotated
-from fastapi import APIRouter, Depends, Response
+
+from fastapi import APIRouter, Depends, Response, HTTPException
 
 from api.dependencies import get_settings
+from packages import exceptions
 from packages.models import Coords, DateRange, Seasons
 from packages.sentinel import (
     get_forestation_analysis,
     process_forest_data_generate_visualisation,
 )
-from packages.models import Coords, DateRange
 from packages.sentinel import AvailableLayers, get_sentinel_image
 from fastapi.responses import StreamingResponse
 import config
@@ -45,13 +46,16 @@ async def get_image(
     )
     date_range = DateRange(start_date, end_date)
     settings = settings.prepare_sh_config()
-    file_content = get_sentinel_image(layer, coords, date_range, settings)
+    try:
+        file_content = get_sentinel_image(layer, coords, date_range, settings)
+    except exceptions.SentinelError:
+        # a bit .... heavy handed but this is a hackaton
+        raise HTTPException(status_code=400, detail="Area wrong or too big, try reducing the area.")
 
     # media_type here sets the media type of the actual response sent to the client.
     return StreamingResponse(
         file_content,
         media_type="image/png",
-        headers={"Content-Disposition": "attachment; filename=image.png"},
     )
 
 
