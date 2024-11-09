@@ -1,4 +1,6 @@
+import base64
 import logging
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response, HTTPException
@@ -8,10 +10,11 @@ from packages import exceptions
 from packages.models import Coords, DateRange, Seasons
 from packages.sentinel import (
     get_forestation_analysis,
+    process_forest_data_generate_deforestation_rate_graph,
     process_forest_data_generate_visualisation,
 )
 from packages.sentinel import AvailableLayers, get_sentinel_image
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import config
 from datetime import datetime
 
@@ -59,6 +62,11 @@ async def get_image(
     )
 
 
+def encode_image_to_base64(image_path: Path):
+    with open(str(image_path), "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode("utf-8")
+
+
 @router.get(
     "/deforestation_analysis",
     responses={200: {"content": {"multipart/mixed": {}}}},
@@ -88,10 +96,20 @@ async def send_deforestation_analysis(
     response = Response()
     response.headers["Content-Type"] = f"multipart/mixed; boundary={boundary}"
 
-    image_content = process_forest_data_generate_visualisation()
+    images_path = process_forest_data_generate_visualisation()
+    content = {}
+    # Read the image in binary mode and encode it in Base64
+    for i in range(len(images_path)):
+        with images_path[i].open("rb") as img_file:
+            encoded_bytes = base64.b64encode(img_file.read())
+            encoded_string = encoded_bytes.decode("utf-8")
+            content[f"image_{i}"] = encoded_string
 
-    return StreamingResponse(
-        image_content,
-        media_type="image/png",
-        headers={"Content-Disposition": "attachment; filename=image.png"},
-    )
+    graph_path = process_forest_data_generate_deforestation_rate_graph()
+    with graph_path.open("rb") as img_file:
+        encoded_bytes = base64.b64encode(img_file.read())
+        encoded_string = encoded_bytes.decode("utf-8")
+        content["graph_rate_deforestation"] = encoded_string
+
+    # Return as JSON response
+    return JSONResponse(content=content)
