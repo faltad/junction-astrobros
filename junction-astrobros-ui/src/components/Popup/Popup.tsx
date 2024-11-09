@@ -3,8 +3,11 @@ import { SWandNE } from "../../utilities/coordinates-helper";
 import { useEffect, useState } from "react";
 import Spinner from "../LoadingSpinner/LoadingSpinner";
 
+import { NavigateFunction } from "react-router-dom";
+
 type PopupProps = {
   coords: SWandNE;
+  navigate: NavigateFunction;
 };
 
 interface FetchImageParams {
@@ -58,15 +61,12 @@ async function fetchImage({
   }
 }
 
-export const Popup = ({ coords }: PopupProps) => {
-  const [img, setImg] = useState<string>("");
-  console.log("In popup");
-  //   const navigate = useNavigate();
+export const Popup = ({ coords, navigate }: PopupProps) => {
+    const [img, setImg] = useState<string>("");
 
   const hanleOnClick = () => {
-    const toPath = `/image?swcoord=${coords?.sw}&neCoord=${coords?.ne}`;
-    console.log("toPath", toPath);
-    // navigate(toPath);
+    const toPath = `/map/details?swcoordlat=${coords?.sw[0]}&swcoordlon=${coords?.sw[1]}&necoordlat=${coords?.ne[0]}&necoordlon=${coords?.ne[1]}`;
+    navigate(toPath);
   };
 
   useEffect(() => {

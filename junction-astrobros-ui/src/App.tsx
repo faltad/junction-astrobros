@@ -2,6 +2,7 @@ import "./App.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import placeholderImage from './assets/fig2.jpg';
 import { Layout } from "./components/Layout/Layout";
+import { Map } from "./components/Map/Map";
 
 const router = createBrowserRouter([
   {
@@ -10,9 +11,14 @@ const router = createBrowserRouter([
     errorElement: <div>Something went very wrong in the parent element</div>,
     children: [
       {
-        path: '/image',
-        element: <div><img src={placeholderImage} /></div>,
+        path: '/',
+        element: <Map />,
         errorElement: <div>Something went wrong in the Child element</div>
+      },
+      {
+        path: '/map/details',
+        element: <div>Details</div>,
+        errorElement: <div>Something went wrong in the Details element</div>
       }
     ]
   }
@@ -20,7 +26,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <Layout />
+    <RouterProvider router={router}/>
   );
 }
 

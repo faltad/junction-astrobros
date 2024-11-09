@@ -1,10 +1,11 @@
+from datetime import datetime
 from enum import Enum
 import io
-from datetime import datetime
 from typing import Optional
 import xarray as xr
 import numpy as np
 
+from packages import exceptions
 from packages.models import Coords, DateRange, Seasons
 
 from ipyleaflet import GeoJSON, Map, basemaps
@@ -68,12 +69,11 @@ def plot_image(
 
 def prepare_bbox(coords: Coords) -> BBox:
     # hardcoded bounding box for now
-
     coords_wgs84 = (
-        coords.south_east_latitude,
-        coords.south_east_longitude,
-        coords.north_west_latitude,
-        coords.north_west_longitude,
+        coords.south_west_longitude,
+        coords.south_west_latitude,
+        coords.north_east_longitude,
+        coords.north_east_latitude,
     )
     return BBox(bbox=coords_wgs84, crs=CRS.WGS84)
 
@@ -200,7 +200,9 @@ def get_ndvi_layer(
         }
     """
     try:
-        image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+        image = _make_sentinel_request(
+            date_range, evalscript_true_color, config, coords
+        )
     except sentinelhub.exceptions.DownloadFailedException:
         raise exceptions.SentinelError()
 
@@ -210,18 +212,22 @@ def get_ndvi_layer(
     return plot_image(image, factor=1 / 255, clip_range=(0, 1))
 
 
-def get_bbox_forestation_analysis() -> BBox:
-    # Desired resolution of our data
-    bbox_coords = [10.633501, 51.611195, 10.787234, 51.698098]
+def get_bbox_forestation_analysis(coords: Coords) -> BBox:
+    coords_wgs84 = (
+        coords.south_west_longitude,
+        coords.south_west_latitude,
+        coords.north_east_longitude,
+        coords.north_east_latitude,
+    )
     epsg = 3035
     # Convert to 3035 to get crs with meters as units
-    bbox = BBox(bbox_coords, CRS(4326)).transform(epsg)
+    bbox = BBox(coords_wgs84, CRS.WGS84).transform(CRS(epsg))
 
-    x, y = bbox.transform(4326).middle
+    x, y = bbox.transform(CRS.WGS84).middle
 
     overview_map = Map(basemap=basemaps.OpenStreetMap.Mapnik, center=(y, x), zoom=10)
     # Add geojson data
-    geo_json = GeoJSON(data=bbox.transform(4326).geojson)
+    geo_json = GeoJSON(data=bbox.transform(CRS.WGS84).geojson)
     overview_map.add_layer(geo_json)
     return bbox
 
@@ -287,19 +293,19 @@ def get_forestation_eval_script():
 def get_interval_of_interest(season: Seasons, year: int) -> tuple[datetime, datetime]:
     match season:
         case Seasons.SUMMER:
-            return (datetime(year, 6, 1), datetime(year, 9, 1))
+            return datetime(year, 6, 1), datetime(year, 9, 1)
         case Seasons.AUTUMN:
-            return (datetime(year, 9, 1), datetime(year, 11, 1))
+            return datetime(year, 9, 1), datetime(year, 11, 1)
         case Seasons.SPRING:
-            return (datetime(year, 3, 1), datetime(year, 6, 1))
+            return datetime(year, 3, 1), datetime(year, 6, 1)
         case Seasons.WINTER:
-            return (datetime(year, 11, 1), datetime(year, 3, 1))
+            return datetime(year, 1, 1), datetime(year, 3, 1)
         case _:
-            return (datetime(year, 6, 1), datetime(year, 9, 1))
+            return datetime(year, 6, 1), datetime(year, 9, 1)
 
 
 def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
-    bbox = get_bbox_forestation_analysis()
+    bbox = get_bbox_forestation_analysis(coords)
 
     resolution = (100, 100)
 
@@ -324,7 +330,7 @@ def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
 
     # create a dictionary of requests
     sh_requests = {}
-    for year in range(2018, 2024):
+    for year in range(2019, 2025):
         sh_requests[year] = get_request(year, config)
 
     list_of_requests = [request.download_list[0] for request in sh_requests.values()]
@@ -340,7 +346,7 @@ def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
         request_output_path(request).rename(f"./data/{year}.tif")
 
 
-def process_forest_data_generate_deforestation_rate_graph():
+def process_forest_data_generate_deforestation_rate_graph() -> io.BytesIO:
     def add_time_dim(xda):
         # This pre-processes the file to add the correct
         # year from the filename as the time dimension
@@ -383,44 +389,50 @@ def process_forest_data_generate_deforestation_rate_graph():
     # tight + 0 pad means no white border on side of pic.
     plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
     img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
-
     return img_buffer
 
 
-def process_forest_data_generate_visualisation():
+def process_forest_data_generate_visualisation() -> dict[str, io.BytesIO]:
     def add_time_dim(xda):
         # This pre-processes the file to add the correct
         # year from the filename as the time dimension
         year = int(Path(xda.encoding["source"]).stem)
         return xda.expand_dims(year=[year])
 
+    files = {}
     tiff_paths = Path("./data").glob("*.tif")
-    ds_s2 = xr.open_mfdataset(
-        tiff_paths,
-        engine="rasterio",
-        preprocess=add_time_dim,
-        band_as_variable=True,
-    )
-    ds_s2 = ds_s2.rename(
-        {
-            "band_1": "R",
-            "band_2": "G",
-            "band_3": "B",
-            "band_4": "NDVI",
-        }
-    )
-    ds_s2 = ds_s2 / 10000
+    for path in tiff_paths:
+        ds_s2 = xr.open_mfdataset(
+            path,
+            engine="rasterio",
+            preprocess=add_time_dim,
+            band_as_variable=True,
+        )
+        ds_s2 = ds_s2.rename(
+            {
+                "band_1": "R",
+                "band_2": "G",
+                "band_3": "B",
+                "band_4": "NDVI",
+            }
+        )
+        ds_s2 = ds_s2 / 10000
 
-    # # vizualisation
-    ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=3)
+        # # vizualisation
+        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
 
-    # Create a BytesIO object to save the image
-    img_buffer = io.BytesIO()
-    # tight + 0 pad means no white border on side of pic.
-    plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
-    img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
+        plt.axis("off")
 
-    return img_buffer
+        for ax in plt.gcf().axes:
+            ax.set_title("")
+        # Create a BytesIO object to save the image
+        img_buffer = io.BytesIO()
+        # tight + 0 pad means no white border on side of pic.
+        plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
+        img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
+        files[f"{path.stem}"] = img_buffer
+
+    return files
 
 
 def get_sentinel_image(

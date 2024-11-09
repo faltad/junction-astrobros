@@ -5,10 +5,10 @@ import enum
 
 @dataclass
 class Coords:
-    south_east_latitude: float
-    south_east_longitude: float
-    north_west_latitude: float
-    north_west_longitude: float
+    south_west_latitude: float
+    south_west_longitude: float
+    north_east_latitude: float
+    north_east_longitude: float
 
 
 @dataclass

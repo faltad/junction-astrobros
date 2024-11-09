@@ -7,10 +7,13 @@ import "./Map.css";
 import { Popup } from "../Popup/Popup";
 import { createRoot } from "react-dom/client";
 import { findSWandNECoordinates } from "../../utilities/coordinates-helper";
+import { useNavigate } from "react-router-dom";
 
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ lat: 0, lon: 0 });
+
+  const navigate = useNavigate();
 
   let map: mapboxgl.Map | null = null;
 
@@ -110,7 +113,7 @@ export const Map = () => {
     const parentNode = document.createElement("div");
     const root = createRoot(parentNode);
 
-    root.render(<Popup coords={SWNECoords} />);
+    root.render(<Popup coords={SWNECoords} navigate={navigate}/>);
 
     new mapboxgl.Popup({ maxWidth: "500px", anchor: "bottom-left" })
       .setLngLat([SWNECoords!.ne[0], SWNECoords!.ne[1]])
