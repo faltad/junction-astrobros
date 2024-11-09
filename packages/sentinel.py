@@ -5,6 +5,7 @@ import numpy as np
 
 from packages.models import Coords
 
+
 import logging
 import matplotlib.pyplot as plt
 
@@ -23,10 +24,10 @@ logger = logging.getLogger(__name__)
 
 
 def plot_image(
-        image: np.ndarray,
-        factor: float = 1.0,
-        clip_range: Optional[tuple[float, float]] = None,
-        **kwargs
+    image: np.ndarray,
+    factor: float = 1.0,
+    clip_range: Optional[tuple[float, float]] = None,
+    **kwargs,
 ) -> io.BytesIO:
     """Utility function for plotting RGB images and returning as a file-like object."""
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
@@ -41,7 +42,7 @@ def plot_image(
 
     # Create a BytesIO object to save the image
     img_buffer = io.BytesIO()
-    plt.savefig(img_buffer, format='png')
+    plt.savefig(img_buffer, format="png")
     img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
 
     # Close the figure to free memory
@@ -53,7 +54,12 @@ def plot_image(
 def prepare_bbox(coords: Coords) -> BBox:
     # hardcoded bounding box for now
     bbox_size = (0.35, 0.35)
-    coords_wgs84 = (coords.latitude, coords.longitude, coords.latitude + bbox_size[0], coords.longitude + bbox_size[1])
+    coords_wgs84 = (
+        coords.latitude,
+        coords.longitude,
+        coords.latitude + bbox_size[0],
+        coords.longitude + bbox_size[1],
+    )
     return BBox(bbox=coords_wgs84, crs=CRS.WGS84)
 
 
@@ -67,7 +73,7 @@ def calculate_size(bbox: BBox) -> tuple[int, int]:
     return size
 
 
-def get_true_colors_sentinel2(coords: Coords, config: SHConfig) ->  io.BytesIO:
+def get_true_colors_sentinel2(coords: Coords, config: SHConfig) -> io.BytesIO:
     """Returns a file-like object with the true colors picture."""
     bbox = prepare_bbox(coords)
     size = calculate_size(bbox)
@@ -95,8 +101,7 @@ def get_true_colors_sentinel2(coords: Coords, config: SHConfig) ->  io.BytesIO:
         input_data=[
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L1C.define_from(
-                    "s2l1c",
-                    service_url=config.sh_base_url
+                    "s2l1c", service_url=config.sh_base_url
                 ),
                 #                time_interval=("2020-06-12", "2020-06-13"),
                 time_interval=("2024-10-23", "2024-10-24"),
