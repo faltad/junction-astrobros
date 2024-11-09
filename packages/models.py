@@ -4,8 +4,10 @@ from datetime import datetime
 
 @dataclass
 class Coords:
-    latitude: float
-    longitude: float
+    south_east_latitude: float
+    south_east_longitude: float
+    north_west_latitude: float
+    north_west_longitude: float
 
 
 @dataclass

@@ -6,6 +6,7 @@
 # ///
 import sys
 from datetime import datetime
+from random import random
 
 from sentinelhub import SHConfig
 
@@ -26,11 +27,29 @@ def prepare_config(client_id: str, client_secret: str) -> SHConfig:
 def main(client_id: str, secret: str):
     config = prepare_config(client_id, secret)
 
-    betsiboka_coords = Coords(latitude=46.16, longitude=-16.15)
-    random_helsinki_coords = Coords(latitude=24.846971, longitude=60.173445)
-    colombia_coords = Coords(latitude=-75.000761, longitude=3.703350)
+    betsiboka_coords = Coords(
+        south_east_latitude=46.16,
+        south_east_longitude=-16.15,
+        north_west_latitude=46.51,
+        north_west_longitude=-15.79,
+    )
+    random_helsinki_coords = Coords(
+        south_east_latitude=24.795581,
+        south_east_longitude=60.138594,
+        north_west_latitude=25.033369,
+        north_west_longitude=60.229115,
+    )
+
+    colombia_coords = Coords(
+        south_east_latitude=-72.639688,
+        south_east_longitude=1.792517,
+        north_west_latitude=-72.598106,
+        north_west_longitude=1.820838,
+    )
     coords = colombia_coords
-    daterange = DateRange(start_date=datetime(2024, 10, 12), end_date=datetime(2024, 10, 15))
+    daterange = DateRange(
+        start_date=datetime(2024, 9, 12), end_date=datetime(2024, 9, 21)
+    )
     pic = get_true_colors(coords, daterange, config)
     with open("output_image.png", "wb") as f:
         f.write(pic.getvalue())

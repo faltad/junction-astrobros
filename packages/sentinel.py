@@ -34,7 +34,7 @@ def plot_image(
     """Utility function for plotting RGB images and returning as a file-like object."""
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
 
-    ax.axis('off')
+    ax.axis("off")
 
     if clip_range is not None:
         ax.imshow(np.clip(image * factor, *clip_range), **kwargs)
@@ -58,12 +58,12 @@ def plot_image(
 
 def prepare_bbox(coords: Coords) -> BBox:
     # hardcoded bounding box for now
-    bbox_size = (0.35, 0.35)
+
     coords_wgs84 = (
-        coords.latitude,
-        coords.longitude,
-        coords.latitude + bbox_size[0],
-        coords.longitude + bbox_size[1],
+        coords.south_east_latitude,
+        coords.south_east_longitude,
+        coords.north_west_latitude,
+        coords.north_west_longitude,
     )
     return BBox(bbox=coords_wgs84, crs=CRS.WGS84)
 
@@ -71,13 +71,17 @@ def prepare_bbox(coords: Coords) -> BBox:
 def calculate_size(bbox: BBox) -> tuple[int, int]:
     """width and height in pixels for given bounding box and pixel resolution"""
     # hardcoded for now, we need to calculate that based on given size of bbox
-    resolution = 20
+    resolution = 7
     size = bbox_to_dimensions(bbox, resolution=resolution)
 
+    # TODO: error handling if size too big
     logger.info(f"Image shape at {resolution}m resolution: {size} pixels")
     return size
 
-def _make_sentinel_request(date_range: DateRange, evalscript: str, config: SHConfig, coords: Coords):
+
+def _make_sentinel_request(
+    date_range: DateRange, evalscript: str, config: SHConfig, coords: Coords
+):
     bbox = prepare_bbox(coords)
     size = calculate_size(bbox)
     start_date = date_range.start_date.strftime(DATEFORMAT)
@@ -101,6 +105,7 @@ def _make_sentinel_request(date_range: DateRange, evalscript: str, config: SHCon
     # TODO: beware of no pictures and so on. This works only in case we want to show most recent
     image = imgs[0]
     return image
+
 
 def get_true_colors(
     coords: Coords, date_range: DateRange, config: SHConfig
@@ -134,7 +139,9 @@ def get_true_colors(
     return plot_image(image, factor=3.5 / 255, clip_range=(0, 1))
 
 
-def get_ndvi_layer(coords: Coords, date_range: DateRange, config: SHConfig) -> io.BytesIO:
+def get_ndvi_layer(
+    coords: Coords, date_range: DateRange, config: SHConfig
+) -> io.BytesIO:
     """
     Normalized difference vegetation index
     The value range of the NDVI is -1 to 1. Negative values of NDVI (values approaching -1) correspond to water.
@@ -183,7 +190,6 @@ def get_ndvi_layer(coords: Coords, date_range: DateRange, config: SHConfig) -> i
         }
     """
     image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
-
 
     # plot function
     # factor 1/255 to scale between 0-1
