@@ -83,7 +83,7 @@ def prepare_bbox(coords: Coords) -> BBox:
 def calculate_size(bbox: BBox) -> tuple[int, int]:
     """width and height in pixels for given bounding box and pixel resolution"""
     # hardcoded for now, we need to calculate that based on given size of bbox
-    resolution = 10
+    resolution = 20
     size = bbox_to_dimensions(bbox, resolution=resolution)
 
     # TODO: error handling if size too big
