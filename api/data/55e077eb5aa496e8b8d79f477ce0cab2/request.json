@@ -43,11 +43,11 @@
                 "resy": 100
             }
         },
-        "timestamp": "2024-11-09T16:31:06.553710",
+        "timestamp": "2024-11-09T16:43:19.664043",
         "url": "https://sh.dataspace.copernicus.eu/api/v1/process"
     },
     "response": {
-        "elapsed": 3.305234,
+        "elapsed": 3.631741,
         "headers": {
             "access-control-allow-credentials": "true",
             "access-control-allow-headers": "origin,content-type,accept,accept-crs,authorization,cache-control",
@@ -55,7 +55,7 @@
             "access-control-allow-origin": "*",
             "access-control-max-age": "3600",
             "content-type": "image/tiff",
-            "date": "Sat, 09 Nov 2024 14:31:03 GMT",
+            "date": "Sat, 09 Nov 2024 14:43:16 GMT",
             "transfer-encoding": "chunked",
             "x-processingunits-spent": "2.355194035644672"
         },

@@ -6,7 +6,6 @@ from api.dependencies import get_settings
 from packages.models import Coords, DateRange, Seasons
 from packages.sentinel import (
     get_forestation_analysis,
-    get_true_colors,
     process_forest_data_generate_visualisation,
 )
 from packages.models import Coords, DateRange
@@ -63,18 +62,24 @@ async def get_image(
 )
 async def send_deforestation_analysis(
     settings: Annotated[config.Settings, Depends(get_settings)],
-    lat: float,
-    long: float,
+    south_east_lat: float,
+    south_east_long: float,
+    north_west_lat: float,
+    north_west_long: float,
     season: Seasons,
 ):
-    # Paths to your image files
+    coords = Coords(
+        north_west_longitude=north_west_long,
+        north_west_latitude=north_west_lat,
+        south_east_longitude=south_east_long,
+        south_east_latitude=south_east_lat,
+    )
     get_forestation_analysis(
         settings.prepare_sh_config(),
-        season=Seasons.SUMMER,
-        coords=Coords(latitude=1, longitude=1),  # not used at the moment
+        season=season,
+        coords=coords,  # not used at the moment
     )
 
-    # Prepare the multipart response
     boundary = "image-boundary"
     response = Response()
     response.headers["Content-Type"] = f"multipart/mixed; boundary={boundary}"

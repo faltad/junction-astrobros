@@ -1,0 +1,1 @@
+{"detail":[{"type":"missing","loc":["query","south_east_lat"],"msg":"Field required","input":null},{"type":"missing","loc":["query","south_east_long"],"msg":"Field required","input":null},{"type":"missing","loc":["query","north_west_lat"],"msg":"Field required","input":null},{"type":"missing","loc":["query","north_west_long"],"msg":"Field required","input":null}]}
