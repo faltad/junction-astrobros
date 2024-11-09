@@ -84,46 +84,43 @@ export const DetailPage = () => {
   console.log(loaderData);
   return (
     <>
-    <Suspense
-      fallback={
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-          }}
-        >
-          <Spinner />
-        </div>
-      }
-    >
-      <Await
-        resolve={loaderData.imagePromise}
-        errorElement={<div>Something went wrong while fetching data...</div>}
+      <Suspense
+        fallback={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Spinner />
+          </div>
+        }
       >
-        {(images) => (
-          <>
-            <div className="title">Deforestation data</div>
-            <div className="button-group-container"></div>
-            <ButtonGroup />
-            <div className="container">
-              {Object.keys(images).map((imageYear) => {
-                if (imageYear !== "graph") {
+        <Await
+          resolve={loaderData.imagePromise}
+          errorElement={<div>Something went wrong while fetching data...</div>}
+        >
+          {(images) => (
+            <>
+              <div className="title">Deforestation data</div>
+              <div className="button-group-container"></div>
+              <ButtonGroup />
+              <div className="container">
+                {Object.keys(images).map((imageYear) => {
                   return (
                     <div className="image-item">
                       <img src={`data:image/png;base64,${images[imageYear]}`} />
                       <p className="caption">Year: {imageYear}</p>
                     </div>
                   );
-                }
-              })}
-            </div>
-          </>
-        )}
-      </Await>
-    </Suspense>
-    
+                })}
+              </div>
+            </>
+          )}
+        </Await>
+      </Suspense>
     </>
   );
 };
