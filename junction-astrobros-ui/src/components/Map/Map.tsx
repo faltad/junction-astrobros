@@ -6,10 +6,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "./Map.css";
 import { Popup } from "../Popup/Popup";
 import { createRoot } from "react-dom/client";
-import {
-  findSWandNECoordinates,
-  SWandNE,
-} from "../../utilities/coordinates-helper";
+import { findSWandNECoordinates } from "../../utilities/coordinates-helper";
 
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -52,7 +49,7 @@ export const Map = () => {
     }
 
     if (map) {
-        map.off('click', addPopUp);
+      map.off("click", addPopUp);
     }
 
     console.log("COORDS", coords);
@@ -92,7 +89,7 @@ export const Map = () => {
     if (!map) {
       return;
     } else {
-        map.off("click", addPopUp);
+      map.off("click", addPopUp);
     }
 
     const coordsData: GeoJSON.FeatureCollection = draw.getAll();
@@ -112,21 +109,20 @@ export const Map = () => {
 
     const parentNode = document.createElement("div");
     const root = createRoot(parentNode);
-  
+
     root.render(<Popup coords={SWNECoords} />);
-  
+
     new mapboxgl.Popup({ maxWidth: "500px", anchor: "bottom-left" })
       .setLngLat([SWNECoords!.ne[0], SWNECoords!.ne[1]])
       .setDOMContent(parentNode)
       .addTo(map);
   };
-  
 
   const getFinalCoordinates = () => {
     if (!map) {
-        return;
+      return;
     } else {
-        map.off("click", addPopUp);
+      map.off("click", addPopUp);
     }
     map.on("click", addPopUp);
   };
