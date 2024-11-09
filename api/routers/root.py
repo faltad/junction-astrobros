@@ -53,7 +53,9 @@ async def get_image(
         file_content = get_sentinel_image(layer, coords, date_range, settings)
     except exceptions.SentinelError:
         # a bit .... heavy handed but this is a hackaton
-        raise HTTPException(status_code=400, detail="Area wrong or too big, try reducing the area.")
+        raise HTTPException(
+            status_code=400, detail="Area wrong or too big, try reducing the area."
+        )
 
     # media_type here sets the media type of the actual response sent to the client.
     return StreamingResponse(
@@ -86,30 +88,20 @@ async def send_deforestation_analysis(
         south_east_longitude=south_east_long,
         south_east_latitude=south_east_lat,
     )
-    get_forestation_analysis(
-        settings.prepare_sh_config(),
-        season=season,
-        coords=coords,  # not used at the moment
-    )
+    get_forestation_analysis(settings.prepare_sh_config(), season=season, coords=coords)
 
     boundary = "image-boundary"
     response = Response()
     response.headers["Content-Type"] = f"multipart/mixed; boundary={boundary}"
 
-    images_path = process_forest_data_generate_visualisation()
+    viz = process_forest_data_generate_visualisation()
     content = {}
-    # Read the image in binary mode and encode it in Base64
-    for i in range(len(images_path)):
-        with images_path[i].open("rb") as img_file:
-            encoded_bytes = base64.b64encode(img_file.read())
-            encoded_string = encoded_bytes.decode("utf-8")
-            content[f"{images_path[i].stem}"] = encoded_string
 
-    graph_path = process_forest_data_generate_deforestation_rate_graph()
-    with graph_path.open("rb") as img_file:
-        encoded_bytes = base64.b64encode(img_file.read())
-        encoded_string = encoded_bytes.decode("utf-8")
-        content["graph_rate_deforestation"] = encoded_string
+    for name, img_data in viz.items():
+        content[name] = base64.b64encode(img_data.read()).decode("utf-8")
+
+    graph = process_forest_data_generate_deforestation_rate_graph()
+    content["graph"] = base64.b64encode(graph.read()).decode("utf-8")
 
     # Return as JSON response
     return JSONResponse(content=content)
