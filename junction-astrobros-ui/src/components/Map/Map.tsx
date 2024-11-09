@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import "./Map.css";
-
-import placeHolderImg from "../../assets/placeholder-img.jpg";
-import ReactDOM from "react-dom";
-import { Popup } from "../Popup/Popup";
+import {
+  findSWandNECoordinates,
+  SWandNE,
+} from "../../utilities/coordinates-helper";
 
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const popUpRef = useRef(new mapboxgl.Popup({ offset: 15 }));
   const [coords, setCoords] = useState({ lat: 0, lon: 0 });
+  const [coordsToQuery, setCoordsToQuery] = useState<SWandNE>(null);
 
   useEffect(() => {
     const successCallBack = (position: GeolocationPosition) => {
@@ -27,6 +29,26 @@ export const Map = () => {
       console.error(error)
     );
   }, []);
+
+  const draw = new MapboxDraw({
+    displayControlsDefault: false,
+    controls: {
+      polygon: true,
+      trash: true,
+    },
+    defaultMode: "draw_polygon",
+  });
+
+  const getFinalCoordinates = () => {
+    const coordsData: GeoJSON.FeatureCollection = draw.getAll();
+    if (coordsData.features.length === 1) {
+      if (coordsData.features[0].geometry.type === "Polygon") {
+        setCoordsToQuery(
+          findSWandNECoordinates(coordsData.features[0].geometry.coordinates)
+        );
+      }
+    }
+  };
 
   useEffect(() => {
     if (!import.meta.env.VITE_MAPBOX_TOKEN) {
@@ -43,13 +65,15 @@ export const Map = () => {
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      //style: "mapbox://styles/mapbox/satellite-v9",
+      //style: "mapbox://styles/mapbox/dark-v11",
+      style: "mapbox://styles/mapbox/satellite-v9",
       center: [coords.lon, coords.lat],
       zoom: 9,
-      minZoom: 7,
-      maxZoom: 11,
     });
+
+    map.addControl(draw);
+
+    map.on("draw.create", getFinalCoordinates);
 
     map.addControl(
       new mapboxgl.GeolocateControl({
@@ -61,44 +85,26 @@ export const Map = () => {
       })
     );
 
-    map.on("click", (e) => {
-      console.log("map clicked", e);
-
-      const popupNode = document.createElement("div")
-      ReactDOM.render(
-        <Popup
-          routeName={"Route name"}
-          routeNumber={"Route number"}
-          city={"City"}
-          type={"Type"}
-        />,
-        popupNode
-      )
-      popUpRef.current
-        .setLngLat(e.lngLat)
-        .setDOMContent(popupNode)
-        .addTo(map)
-
-    //   new mapboxgl.Popup()
-    //     .setLngLat(e.lngLat)
-    //     .setHTML(
-    //       `<h3>Coordinates</h3><p>Lng: ${e.lngLat.lng.toFixed(
-    //         4
-    //       )}, Lat: ${e.lngLat.lat.toFixed(
-    //         4
-    //       )}</p><img src=${placeHolderImg}>`
-    //     )
-    //     .addTo(map);
-    });
-
     return () => {
       map.remove();
     };
   }, [coords]);
 
+  console.log(coordsToQuery);
+
   return (
-    <>
-      <div id="map-container" className="map-container" ref={mapContainerRef} />
-    </>
+    <div
+      id="map-container"
+      ref={mapContainerRef}
+      style={{
+        position: "absolute",
+        top: 32,
+        bottom: 32,
+        left: 0,
+        overflow: "hidden",
+        borderRadius: 50,
+        width: "calc(100% - 24px)",
+      }}
+    />
   );
 };

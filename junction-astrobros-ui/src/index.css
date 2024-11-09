@@ -1,6 +1,6 @@
 * {
   margin: 0;
 }
-.mapboxgl-control-container {
+.mapboxgl-ctrl-attrib-inner {
   display: none !important;
 }
