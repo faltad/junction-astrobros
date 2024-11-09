@@ -55,7 +55,7 @@ async def get_image(
         south_west_longitude=south_west_long,
         south_west_latitude=south_west_lat,
     )
-    date_range = DateRange(start_date, end_date)
+    date_range = get_daterange(date)
     sh_config = settings.prepare_sh_config()
     try:
         file_content = get_sentinel_image(layer, coords, date_range, sh_config)
