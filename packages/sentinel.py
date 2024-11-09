@@ -1,4 +1,6 @@
+import enum
 import io
+from enum import Enum
 from typing import Optional
 
 import numpy as np
@@ -23,6 +25,11 @@ from sentinelhub import (
 logger = logging.getLogger(__name__)
 
 DATEFORMAT = "%Y-%m-%d"
+
+
+class AvailableLayers(str, Enum):
+    NDVI = "ndvi"
+    TRUE_COLORS = "true_colors"
 
 
 def plot_image(
@@ -195,3 +202,13 @@ def get_ndvi_layer(
     # factor 1/255 to scale between 0-1
     # factor 1 to not over brighten the picture
     return plot_image(image, factor=1 / 255, clip_range=(0, 1))
+
+
+def get_sentinel_image(
+    layer: AvailableLayers, coords: Coords, date_range: DateRange, config: SHConfig
+) -> io.BytesIO:
+    if layer == AvailableLayers.TRUE_COLORS:
+        return get_true_colors(coords, date_range, config)
+    elif layer == AvailableLayers.NDVI:
+        return get_ndvi_layer(coords, date_range, config)
+    raise ValueError(f"Unavailable layer {str(layer.value)}")
