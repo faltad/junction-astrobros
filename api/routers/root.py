@@ -9,6 +9,8 @@ from packages.sentinel import (
     get_true_colors,
     process_forest_data_generate_visualisation,
 )
+from packages.models import Coords, DateRange
+from packages.sentinel import AvailableLayers, get_sentinel_image
 from fastapi.responses import StreamingResponse
 import config
 from datetime import datetime
@@ -28,16 +30,24 @@ def root():
 )
 async def get_image(
     settings: Annotated[config.Settings, Depends(get_settings)],
-    lat: float,
-    long: float,
+    south_east_lat: float,
+    south_east_long: float,
+    north_west_lat: float,
+    north_west_long: float,
     start_date: datetime,
     end_date: datetime,
+    layer: AvailableLayers = AvailableLayers.TRUE_COLORS,
 ):
-    file_content = get_true_colors(
-        config=settings.prepare_sh_config(),
-        coords=Coords(latitude=lat, longitude=long),
-        date_range=DateRange(start_date, end_date),
+    coords = Coords(
+        north_west_longitude=north_west_long,
+        north_west_latitude=north_west_lat,
+        south_east_longitude=south_east_long,
+        south_east_latitude=south_east_lat,
     )
+    date_range = DateRange(start_date, end_date)
+    settings = settings.prepare_sh_config()
+    file_content = get_sentinel_image(layer, coords, date_range, settings)
+
     # media_type here sets the media type of the actual response sent to the client.
     return StreamingResponse(
         file_content,

@@ -13,5 +13,6 @@ dependencies = [
     "pydantic-settings>=2.6.1",
     "rasterio>=1.4.2",
     "rioxarray>=0.18.1",
+    "ruff>=0.7.3",
     "sentinelhub>=3.11.1",
 ]

@@ -1,3 +1,4 @@
+from enum import Enum
 import io
 from datetime import datetime
 from typing import Optional
@@ -27,6 +28,11 @@ from sentinelhub import (
 logger = logging.getLogger(__name__)
 
 DATEFORMAT = "%Y-%m-%d"
+
+
+class AvailableLayers(str, Enum):
+    NDVI = "ndvi"
+    TRUE_COLORS = "true_colors"
 
 
 def plot_image(
@@ -62,12 +68,12 @@ def plot_image(
 
 def prepare_bbox(coords: Coords) -> BBox:
     # hardcoded bounding box for now
-    bbox_size = (0.35, 0.35)
+
     coords_wgs84 = (
-        coords.latitude,
-        coords.longitude,
-        coords.latitude + bbox_size[0],
-        coords.longitude + bbox_size[1],
+        coords.south_east_latitude,
+        coords.south_east_longitude,
+        coords.north_west_latitude,
+        coords.north_west_longitude,
     )
     return BBox(bbox=coords_wgs84, crs=CRS.WGS84)
 
@@ -78,6 +84,7 @@ def calculate_size(bbox: BBox) -> tuple[int, int]:
     resolution = 20
     size = bbox_to_dimensions(bbox, resolution=resolution)
 
+    # TODO: error handling if size too big
     logger.info(f"Image shape at {resolution}m resolution: {size} pixels")
     return size
 
@@ -417,3 +424,13 @@ def process_forest_data_generate_visualisation():
     img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
 
     return img_buffer
+
+
+def get_sentinel_image(
+    layer: AvailableLayers, coords: Coords, date_range: DateRange, config: SHConfig
+) -> io.BytesIO:
+    if layer == AvailableLayers.TRUE_COLORS:
+        return get_true_colors(coords, date_range, config)
+    elif layer == AvailableLayers.NDVI:
+        return get_ndvi_layer(coords, date_range, config)
+    raise ValueError(f"Unavailable layer {str(layer.value)}")
