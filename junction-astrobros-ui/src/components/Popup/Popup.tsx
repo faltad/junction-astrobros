@@ -62,7 +62,7 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
   const [img, setImg] = useState<string>("");
 
   const hanleOnClick = () => {
-    const toPath = `/map/details?swcoordlat=${coords?.sw[0]}&swcoordlon=${coords?.sw[1]}&necoordlat=${coords?.ne[0]}&necoordlon=${coords?.ne[1]}`;
+    const toPath = `/map/details?swlat=${coords?.sw[1]}&swlon=${coords?.sw[0]}&nelat=${coords?.ne[1]}&nelon=${coords?.ne[0]}`;
     navigate(toPath);
   };
 
@@ -75,7 +75,10 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
       date: "2023-01-01",
       layer: "ndvi",
     })
-      .then((data) => setImg(URL.createObjectURL(data)))
+      .then((data) => {
+        console.log("data", data);
+        setImg(URL.createObjectURL(data));
+      })
       .finally(() => {
         console.log(img);
       });

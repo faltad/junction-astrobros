@@ -14,6 +14,7 @@ export default defineConfig({
     proxy: {
       "/styles": "https://api.mapbox.com",
       "/image": "http://172.20.10.3:8000",
+      "/deforestation_analysis": "http://172.20.10.3:8000",
     },
   },
   assetsInclude: ["**/*.JPG"],
