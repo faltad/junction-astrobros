@@ -7,5 +7,6 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]>=0.115.4",
     "matplotlib>=3.9.2",
+    "pydantic-settings>=2.6.1",
     "sentinelhub>=3.11.1",
 ]
