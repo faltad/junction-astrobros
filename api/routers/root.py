@@ -29,7 +29,6 @@ async def get_image(
     start_date: datetime,
     end_date: datetime,
 ):
-    logger.error(settings)
     file_content = get_true_colors_sentinel2(
         config=settings.prepare_sh_config(),
         coords=Coords(latitude=lat, longitude=long),
