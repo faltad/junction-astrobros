@@ -5,13 +5,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 import "./Map.css";
 
-import placeHolderImg from "../../assets/placeholder-img.jpg";
-import ReactDOM from "react-dom";
 import { Popup } from "../Popup/Popup";
+import { createRoot } from "react-dom/client";
 
 export const Map = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const popUpRef = useRef(new mapboxgl.Popup({ offset: 15 }));
   const [coords, setCoords] = useState({ lat: 0, lon: 0 });
 
   useEffect(() => {
@@ -64,31 +62,29 @@ export const Map = () => {
     map.on("click", (e) => {
       console.log("map clicked", e);
 
-      const popupNode = document.createElement("div")
-      ReactDOM.render(
-        <Popup
-          routeName={"Route name"}
-          routeNumber={"Route number"}
-          city={"City"}
-          type={"Type"}
-        />,
-        popupNode
-      )
-      popUpRef.current
+      const popupNode = document.createElement("div");
+
+      const root = createRoot(popupNode);
+
+      root.render(
+        <Popup swCoord={"24.85"} neCoord={"59.47"} />
+      );
+
+      new mapboxgl.Popup({ maxWidth: "500px", anchor: "bottom-left" })
         .setLngLat(e.lngLat)
         .setDOMContent(popupNode)
-        .addTo(map)
+        .addTo(map);
 
-    //   new mapboxgl.Popup()
-    //     .setLngLat(e.lngLat)
-    //     .setHTML(
-    //       `<h3>Coordinates</h3><p>Lng: ${e.lngLat.lng.toFixed(
-    //         4
-    //       )}, Lat: ${e.lngLat.lat.toFixed(
-    //         4
-    //       )}</p><img src=${placeHolderImg}>`
-    //     )
-    //     .addTo(map);
+      //   new mapboxgl.Popup({ maxWidth: "500px", anchor: 'bottom-left' })
+      //     .setLngLat(e.lngLat)
+      //     .setHTML(
+      //       `<h3>Coordinates</h3><p>Lng: ${e.lngLat.lng.toFixed(
+      //         4
+      //       )}, Lat: ${e.lngLat.lat.toFixed(
+      //         4
+      //       )}</p><img src=${placeHolderImg}>`
+      //     )
+      //     .addTo(map);
     });
 
     return () => {
