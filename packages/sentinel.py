@@ -1,15 +1,16 @@
-import enum
-import io
+from datetime import datetime
 from enum import Enum
+import io
 from typing import Optional
-
+import xarray as xr
 import numpy as np
 
-from packages.models import Coords, DateRange
 from packages import exceptions
 from packages.models import Coords, DateRange, Seasons
 
+from ipyleaflet import GeoJSON, Map, basemaps
 
+from pathlib import Path
 import logging
 import matplotlib.pyplot as plt
 
@@ -21,8 +22,9 @@ from sentinelhub import (
     MimeType,
     SentinelHubRequest,
     bbox_to_dimensions,
+    SentinelHubDownloadClient,
 )
-
+import sentinelhub
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +200,10 @@ def get_ndvi_layer(
            return imgVals.concat(samples.dataMask)
         }
     """
-    image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    try:
+        image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    except sentinelhub.exceptions.DownloadFailedException:
+        raise exceptions.SentinelError()
 
     # plot function
     # factor 1/255 to scale between 0-1
@@ -299,7 +304,7 @@ def get_interval_of_interest(season: Seasons, year: int) -> tuple[datetime, date
 
 
 def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
-    bbox = get_bbox_forestation_analysis(coords)
+    bbox = get_bbox_forestation_analysis()
 
     resolution = (100, 100)
 

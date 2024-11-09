@@ -1,0 +1,15 @@
+.navbarWrapper {
+  width: 115px;
+}
+
+.navbar {
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-content: center;
+  gap: 42px;
+  padding-top: 32px;
+}
