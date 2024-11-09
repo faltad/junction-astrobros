@@ -423,7 +423,11 @@ def process_forest_data_generate_visualisation() -> list[Path]:
         ds_s2 = ds_s2 / 10000
 
         # # vizualisation
-        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
+        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1, add_colorbar=False, add_labels=False)
+        plt.axis("off")
+
+        for ax in plt.gcf().axes:
+            ax.set_title('')
         plt.savefig(
             file / f"img_{path.stem}.png", dpi=800, bbox_inches="tight", pad_inches=0
         )
