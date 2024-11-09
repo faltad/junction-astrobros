@@ -1,10 +1,11 @@
+from datetime import datetime
 from enum import Enum
 import io
-from datetime import datetime
 from typing import Optional
 import xarray as xr
 import numpy as np
 
+from packages import exceptions
 from packages.models import Coords, DateRange, Seasons
 
 from ipyleaflet import GeoJSON, Map, basemaps
@@ -210,18 +211,22 @@ def get_ndvi_layer(
     return plot_image(image, factor=1 / 255, clip_range=(0, 1))
 
 
-def get_bbox_forestation_analysis() -> BBox:
-    # Desired resolution of our data
-    bbox_coords = [10.633501, 51.611195, 10.787234, 51.698098]
+def get_bbox_forestation_analysis(coords: Coords) -> BBox:
+    coords = (
+        coords.south_east_latitude,
+        coords.south_east_longitude,
+        coords.north_west_latitude,
+        coords.north_west_longitude,
+    )
     epsg = 3035
     # Convert to 3035 to get crs with meters as units
-    bbox = BBox(bbox_coords, CRS(4326)).transform(epsg)
+    bbox = BBox(coords, CRS.WGS84).transform(CRS(epsg))
 
-    x, y = bbox.transform(4326).middle
+    x, y = bbox.transform(CRS.WGS84).middle
 
     overview_map = Map(basemap=basemaps.OpenStreetMap.Mapnik, center=(y, x), zoom=10)
     # Add geojson data
-    geo_json = GeoJSON(data=bbox.transform(4326).geojson)
+    geo_json = GeoJSON(data=bbox.transform(CRS.WGS84).geojson)
     overview_map.add_layer(geo_json)
     return bbox
 
@@ -287,15 +292,15 @@ def get_forestation_eval_script():
 def get_interval_of_interest(season: Seasons, year: int) -> tuple[datetime, datetime]:
     match season:
         case Seasons.SUMMER:
-            return (datetime(year, 6, 1), datetime(year, 9, 1))
+            return datetime(year, 6, 1), datetime(year, 9, 1)
         case Seasons.AUTUMN:
-            return (datetime(year, 9, 1), datetime(year, 11, 1))
+            return datetime(year, 9, 1), datetime(year, 11, 1)
         case Seasons.SPRING:
-            return (datetime(year, 3, 1), datetime(year, 6, 1))
+            return datetime(year, 3, 1), datetime(year, 6, 1)
         case Seasons.WINTER:
-            return (datetime(year, 11, 1), datetime(year, 3, 1))
+            return datetime(year, 1, 1), datetime(year, 3, 1)
         case _:
-            return (datetime(year, 6, 1), datetime(year, 9, 1))
+            return datetime(year, 6, 1), datetime(year, 9, 1)
 
 
 def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
@@ -324,7 +329,7 @@ def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
 
     # create a dictionary of requests
     sh_requests = {}
-    for year in range(2018, 2024):
+    for year in range(2019, 2025):
         sh_requests[year] = get_request(year, config)
 
     list_of_requests = [request.download_list[0] for request in sh_requests.values()]
