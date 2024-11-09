@@ -16,12 +16,20 @@ from packages.sentinel import (
 from packages.sentinel import AvailableLayers, get_sentinel_image
 from fastapi.responses import JSONResponse, StreamingResponse
 import config
-from datetime import datetime
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
+
+def get_daterange(date: datetime) -> DateRange:
+    previous_monday = date - timedelta(days=date.weekday())
+
+    days_until_sunday = 6 - date.weekday()
+    next_sunday = date + timedelta(days=days_until_sunday)
+
+    return DateRange(start_date=previous_monday, end_date=next_sunday)
 
 @router.get("/")
 def root():
@@ -37,8 +45,7 @@ async def get_image(
     south_west_long: float,
     north_east_lat: float,
     north_east_long: float,
-    start_date: datetime,
-    end_date: datetime,
+    date: datetime,
     layer: AvailableLayers = AvailableLayers.TRUE_COLORS,
 ):
     coords = Coords(
@@ -47,10 +54,11 @@ async def get_image(
         south_west_longitude=south_west_long,
         south_west_latitude=south_west_lat,
     )
-    date_range = DateRange(start_date, end_date)
+
+    date_range = get_daterange(date)
     settings = settings.prepare_sh_config()
     try:
-        file_content = get_sentinel_image(layer, coords, date_range, settings)
+        file_content = await get_sentinel_image(layer, coords, date_range, settings)
     except exceptions.SentinelError:
         # a bit .... heavy handed but this is a hackaton
         raise HTTPException(

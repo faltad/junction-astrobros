@@ -89,7 +89,7 @@ def calculate_size(bbox: BBox) -> tuple[int, int]:
     return size
 
 
-def _make_sentinel_request(
+async def _make_sentinel_request(
     date_range: DateRange, evalscript: str, config: SHConfig, coords: Coords
 ):
     bbox = prepare_bbox(coords)
@@ -117,7 +117,7 @@ def _make_sentinel_request(
     return image
 
 
-def get_true_colors(
+async def get_true_colors(
     coords: Coords, date_range: DateRange, config: SHConfig
 ) -> io.BytesIO:
     """Returns a file-like object with the true colors picture."""
@@ -141,7 +141,7 @@ def get_true_colors(
             }
         """
 
-    image = _make_sentinel_request(date_range, evalscript_true_color, config, coords)
+    image = await _make_sentinel_request(date_range, evalscript_true_color, config, coords)
 
     # plot function
     # factor 1/255 to scale between 0-1
@@ -149,7 +149,7 @@ def get_true_colors(
     return plot_image(image, factor=3.5 / 255, clip_range=(0, 1))
 
 
-def get_ndvi_layer(
+async def get_ndvi_layer(
     coords: Coords, date_range: DateRange, config: SHConfig
 ) -> io.BytesIO:
     """
@@ -200,7 +200,7 @@ def get_ndvi_layer(
         }
     """
     try:
-        image = _make_sentinel_request(
+        image = await _make_sentinel_request(
             date_range, evalscript_true_color, config, coords
         )
     except sentinelhub.exceptions.DownloadFailedException:
@@ -435,11 +435,11 @@ def process_forest_data_generate_visualisation() -> dict[str, io.BytesIO]:
     return files
 
 
-def get_sentinel_image(
+async def get_sentinel_image(
     layer: AvailableLayers, coords: Coords, date_range: DateRange, config: SHConfig
 ) -> io.BytesIO:
     if layer == AvailableLayers.TRUE_COLORS:
-        return get_true_colors(coords, date_range, config)
+        return await get_true_colors(coords, date_range, config)
     elif layer == AvailableLayers.NDVI:
-        return get_ndvi_layer(coords, date_range, config)
+        return await get_ndvi_layer(coords, date_range, config)
     raise ValueError(f"Unavailable layer {str(layer.value)}")
