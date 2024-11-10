@@ -31,6 +31,7 @@ def get_daterange(date: datetime) -> DateRange:
 
     return DateRange(start_date=previous_monday, end_date=next_sunday)
 
+
 @router.get("/")
 def root():
     return {"message": "Api sure is running"}
@@ -54,11 +55,10 @@ async def get_image(
         south_west_longitude=south_west_long,
         south_west_latitude=south_west_lat,
     )
-
     date_range = get_daterange(date)
-    settings = settings.prepare_sh_config()
+    sh_config = settings.prepare_sh_config()
     try:
-        file_content = await get_sentinel_image(layer, coords, date_range, settings)
+        file_content = await get_sentinel_image(layer, coords, date_range, sh_config)
     except exceptions.SentinelError:
         # a bit .... heavy handed but this is a hackaton
         raise HTTPException(
@@ -91,10 +91,10 @@ async def send_deforestation_analysis(
     season: Seasons,
 ):
     coords = Coords(
-        north_east_longitude=north_east_long,
-        north_east_latitude=north_east_lat,
         south_west_longitude=south_west_long,
         south_west_latitude=south_west_lat,
+        north_east_longitude=north_east_long,
+        north_east_latitude=north_east_lat,
     )
     get_forestation_analysis(settings.prepare_sh_config(), season=season, coords=coords)
 

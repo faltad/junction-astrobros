@@ -41,10 +41,10 @@ def main():
         start_date=datetime(2024, 9, 12), end_date=datetime(2024, 9, 21)
     )
     pic = get_true_colors(coords, daterange, config)
-    with open("output_image.png", "wb") as f:
+    with open("../output_image.png", "wb") as f:
         f.write(pic.getvalue())
     pic = get_ndvi_layer(coords, daterange, config)
-    with open("image_ndvi.png", "wb") as f:
+    with open("../image_ndvi.png", "wb") as f:
         f.write(pic.getvalue())
 
 

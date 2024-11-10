@@ -3,6 +3,8 @@ import { SWandNE } from "../../utilities/coordinates-helper";
 import { useEffect, useState } from "react";
 import Spinner from "../LoadingSpinner/LoadingSpinner";
 
+import WeekDatePicker from "../WeekDatePicker/WeekDatePicker";
+
 import { NavigateFunction } from "react-router-dom";
 
 type PopupProps = {
@@ -60,6 +62,7 @@ async function fetchImage({
 
 export const Popup = ({ coords, navigate }: PopupProps) => {
   const [img, setImg] = useState<string>("");
+  const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
 
   const hanleOnClick = () => {
     const toPath = `/map/details?swlat=${coords?.sw[1]}&swlon=${coords?.sw[0]}&nelat=${coords?.ne[1]}&nelon=${coords?.ne[0]}`;
@@ -72,7 +75,7 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
       southWestLong: coords!.sw[0],
       northEastLat: coords!.ne[1],
       northEastLong: coords!.ne[0],
-      date: "2023-01-01",
+      date: currentWeek.toISOString().split("T")[0],
       layer: "ndvi",
     })
       .then((data) => {
@@ -82,10 +85,11 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
       .finally(() => {
         console.log(img);
       });
-  }, []);
+  }, [currentWeek]);
 
   return (
     <div className="popup">
+      <WeekDatePicker date={currentWeek} setCurrentWeek={setCurrentWeek} />
       {img && <img className="layer-img" src={img} />}
       {!img && <Spinner />}
       <button onClick={hanleOnClick} className="popup-button">
