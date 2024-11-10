@@ -49,6 +49,8 @@
   flex-direction: column;
   gap: 16px;
   align-items: center;
+	max-width: 600px;
+	max-height: 600px;
 }
 
 .popup-image {
@@ -81,6 +83,11 @@
   touch-action: manipulation;
 }
 
+
+.popup-image,
 .layer-img {
   width: 100%;
+  max-height: 200px; /* Adjust this value as needed */
+  object-fit: contain; /* Ensures the image is scaled properly without distortion */
+  border-radius: 8px; /* Optional: rounds the corners of the image */
 }
