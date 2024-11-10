@@ -58,7 +58,7 @@ async def get_image(
     date_range = get_daterange(date)
     sh_config = settings.prepare_sh_config()
     try:
-        file_content = get_sentinel_image(layer, coords, date_range, sh_config)
+        file_content = await get_sentinel_image(layer, coords, date_range, sh_config)
     except exceptions.SentinelError:
         # a bit .... heavy handed but this is a hackaton
         raise HTTPException(
