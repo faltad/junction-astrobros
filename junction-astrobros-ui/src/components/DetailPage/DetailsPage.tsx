@@ -6,12 +6,17 @@ import {
   useLoaderData,
 } from "react-router-dom";
 import "./DetailedPage.css";
+import Spinner from "../LoadingSpinner/LoadingSpinner";
+import { ButtonGroup } from "../ButtonGroup/ButtonGroup";
+
+export type Season = "winter" | "spring" | "summer" | "autumn";
 
 interface FetchImageParams {
   southWestLat: string;
   southWestLong: string;
   northEastLat: string;
   northEastLong: string;
+  season: Season;
 }
 
 export const imagesPromise = async ({
@@ -19,6 +24,7 @@ export const imagesPromise = async ({
   southWestLong,
   northEastLat,
   northEastLong,
+  season,
 }: FetchImageParams) => {
   const url = new URL("http://172.20.10.3:8000/deforestation_analysis");
 
@@ -27,7 +33,7 @@ export const imagesPromise = async ({
   url.searchParams.append("south_west_long", southWestLong.toString());
   url.searchParams.append("north_east_lat", northEastLat.toString());
   url.searchParams.append("north_east_long", northEastLong.toString());
-  url.searchParams.append("season", "summer");
+  url.searchParams.append("season", season);
 
   try {
     const response = await fetch(url.pathname + url.search, {
@@ -57,8 +63,10 @@ export const loader = ({ request }: LoaderFunctionArgs) => {
   const southWestLong: string = urlObj.searchParams.get("swlon")!;
   const northEastLat: string = urlObj.searchParams.get("nelat")!;
   const northEastLong: string = urlObj.searchParams.get("nelon")!;
+  const season: Season =
+    (urlObj.searchParams.get("season") as Season) || "spring";
 
-  console.log(southWestLat, southWestLong, northEastLat, northEastLong);
+  console.log(southWestLat, southWestLong, northEastLat, northEastLong, season);
 
   return defer({
     imagePromise: imagesPromise({
@@ -66,6 +74,7 @@ export const loader = ({ request }: LoaderFunctionArgs) => {
       southWestLong,
       northEastLat,
       northEastLong,
+      season,
     }),
   });
 };
@@ -74,17 +83,34 @@ export const DetailPage = () => {
   const loaderData = useLoaderData() as { imagePromise: unknown };
   console.log(loaderData);
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Await
-        resolve={loaderData.imagePromise}
-        errorElement={<div>Something went wrong while fetching data...</div>}
+    <>
+      <Suspense
+        fallback={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <Spinner />
+          </div>
+        }
       >
-        {(images) => (
-          <>
-            <div className="title">Deforestation data</div>
-            <div className="container">
-              {Object.keys(images).map((imageYear) => {
-                if (imageYear !== "graph") {
+        <Await
+          resolve={loaderData.imagePromise}
+          errorElement={<div>Something went wrong while fetching data...</div>}
+        >
+          {(images) => (
+            <>
+              <div className="title">Forest cover changes</div>
+              <div className="button-group-container"></div>
+              <ButtonGroup />
+              <div className="container">
+                {Object.keys(images).map((imageYear) => {
+                  if (imageYear !== "graph") {
+
                   return (
                     <div className="image-item" key={`${imageYear}`}>
                       <img src={`data:image/png;base64,${images[imageYear]}`} />
@@ -127,5 +153,6 @@ export const DetailPage = () => {
         )}
       </Await>
     </Suspense>
+  </>
   );
 };

@@ -1,28 +1,26 @@
-import base64
+from datetime import datetime
 import config
-from packages.models import Coords, Seasons
+from packages.models import Coords, DateRange
 from packages.sentinel import (
-    get_forestation_analysis,
-    process_forest_data_generate_deforestation_rate_graph,
+    get_oil_spill_analysis,
 )
 
 
 def run():
     settings = config.Settings()
-    get_forestation_analysis(
-        settings.prepare_sh_config(),
-        season=Seasons.SUMMER,
+    pic = get_oil_spill_analysis(
+        config=settings.prepare_sh_config(),
+        date_range=DateRange(
+            start_date=datetime(2019, 10, 13), end_date=datetime(2019, 10, 13)
+        ),
         coords=Coords(
-            south_west_latitude=24.3917701,
-            south_west_longitude=60.246912,
-            north_east_latitude=24.729401,
-            north_east_longitude=60.364885,
+            south_west_latitude=21.2,
+            south_west_longitude=37.8,
+            north_east_latitude=21.7,
+            north_east_longitude=38.26,
         ),
     )
-    # process_forest_data_generate_visualisation()
-    out = process_forest_data_generate_deforestation_rate_graph()
-    print(base64.b64encode(out.read()).decode("utf-8"))
-    print(str(out))
+    print(str(pic))
 
 
 if __name__ == "__main__":
