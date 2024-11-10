@@ -122,6 +122,7 @@ export const DetailPage = () => {
                     <div className="title">Deforestation data</div>
                     <ButtonGroup />
                   </div>
+                  <br />
                   <div className="container">
                     {Object.keys(images).map((imageYear) => {
                       return (
