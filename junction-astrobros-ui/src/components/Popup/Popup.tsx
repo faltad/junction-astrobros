@@ -72,7 +72,7 @@ export const Popup = ({ coords, navigate }: PopupProps) => {
       southWestLong: coords!.sw[0],
       northEastLat: coords!.ne[1],
       northEastLong: coords!.ne[0],
-      date: "2023-01-01",
+      date: "2023-08-01",
       layer: "ndvi",
     })
       .then((data) => {

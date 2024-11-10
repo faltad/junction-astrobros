@@ -36,3 +36,54 @@
   color: #555;
   margin-top: 5px;
 }
+
+.gradient-container {
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.gradient-labels-container {
+    margin: auto;
+    width: 50%;
+}
+
+.gradient-container p {
+    font-size: 12px;
+}
+
+.gradient-prgn {
+  background: linear-gradient(to right,
+    #762a83,   /* Dark purple at the bottom */
+    #af8dc3,   /* Light purple */
+    #f7f7f7,   /* Neutral gray */
+    #7fbf7b,   /* Light green */
+    #1b7837    /* Dark green at the top */
+  );
+  height: 10px;
+  width: 200px;
+  margin-right: 10px;
+  border: 1px solid;
+}
+
+.labels {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 200px;
+}
+
+.labels span {
+  font-size: 14px;
+  text-align: center;
+}
+
+.info-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;      /* Center vertically */
+  max-width: 900px;
+  margin: 0 auto;
+  margin-top: 35px;
+  text-align: center;
+}

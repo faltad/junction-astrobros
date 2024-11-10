@@ -307,7 +307,7 @@ def get_interval_of_interest(season: Seasons, year: int) -> tuple[datetime, date
 def get_forestation_analysis(config: SHConfig, season: Seasons, coords: Coords):
     bbox = get_bbox_forestation_analysis(coords)
 
-    resolution = (100, 100)
+    resolution = (50, 50)
 
     def get_request(year, config: SHConfig):
         time_interval = get_interval_of_interest(season=season, year=year)
@@ -421,7 +421,7 @@ def process_forest_data_generate_visualisation() -> dict[str, io.BytesIO]:
         ds_s2 = ds_s2 / 10000
 
         # # vizualisation
-        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1)
+        ds_s2.NDVI.plot(cmap="PRGn", x="x", y="y", col="year", col_wrap=1, add_colorbar=False, add_labels=False)
 
         plt.axis("off")
 
@@ -430,7 +430,7 @@ def process_forest_data_generate_visualisation() -> dict[str, io.BytesIO]:
         # Create a BytesIO object to save the image
         img_buffer = io.BytesIO()
         # tight + 0 pad means no white border on side of pic.
-        plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0)
+        plt.savefig(img_buffer, format="png", bbox_inches="tight", pad_inches=0, dpi=800)
         img_buffer.seek(0)  # Reset the file pointer to the start of the buffer
         files[f"{path.stem}"] = img_buffer
 
